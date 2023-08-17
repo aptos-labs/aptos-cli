@@ -15,6 +15,8 @@ const getOS = () => {
       return "MacOSX";
     case "linux":
       return "Ubuntu";
+    case "win32":
+      return "Windows";
     default:
       throw new Error(`Unsupported OS ${platform}`);
   }
@@ -29,13 +31,25 @@ const main = async () => {
     await new Promise((resolve, reject) => {
       const url = `https://github.com/aptos-labs/aptos-core/releases/download/${PNAME}-v${VERSION}/${PNAME}-${VERSION}-${os}-x86_64.zip`;
       console.log("Downloading aptos CLI...");
-      const downloadProcess = spawn(
-        `curl -L -o /tmp/aptos.zip ${url}; unzip -o -q /tmp/aptos.zip -d /tmp; mv /tmp/aptos ${__dirname}/${binaryName};`,
-        {
-          stdio: "inherit",
-          shell: true,
-        }
-      );
+      let downloadProcess;
+      if (os === "Windows") {
+        downloadProcess = spawn(
+          `curl -L -o C:/tmp/aptos.zip ${url} & powershell Expand-Archive -Path C:/tmp/aptos.zip -DestinationPath C:/tmp -Force & move C:/tmp/aptos ${__dirname}/${binaryName}`,
+          {
+            stdio: "inherit",
+            shell: true,
+          }
+        );
+      } else {
+        downloadProcess = spawn(
+          `curl -L -o /tmp/aptos.zip ${url}; unzip -o -q /tmp/aptos.zip -d /tmp; mv /tmp/aptos ${__dirname}/${binaryName};`,
+          {
+            stdio: "inherit",
+            shell: true,
+          }
+        );
+      }
+
       downloadProcess.on("close", (code) => {
         if (code !== 0) {
           reject("Error occurred while downloading aptos CLI");
