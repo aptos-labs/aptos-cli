@@ -1,6 +1,6 @@
 {
   "name": "@aptos-labs/aptos-cli",
-  "version": "2.0.2",
+  "version": "0.0.1",
   "description": "Aptos CLI available from npmjs",
   "bin": {
     "aptos": "bin/aptos"
