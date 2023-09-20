@@ -34,7 +34,7 @@ const main = async () => {
       let downloadProcess;
       if (os === "Windows") {
         downloadProcess = spawn(
-          `curl -L -o C:/tmp/aptos.zip ${url} & powershell Expand-Archive -Path C:/tmp/aptos.zip -DestinationPath C:/tmp -Force & move C:/tmp/aptos ${__dirname}/${binaryName}`,
+          `curl -L -o C:/tmp/aptos.zip ${url} & powershell Expand-Archive -Path C:/tmp/aptos.zip -DestinationPath C:/tmp -Force & move C:\\tmp\\aptos.exe ${__dirname}/${binaryName}`,
           {
             stdio: "inherit",
             shell: true,
