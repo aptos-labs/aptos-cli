@@ -30,7 +30,7 @@ const main = async () => {
   if (!fs.existsSync(`${__dirname}/${binaryName}`)) {
     await new Promise((resolve, reject) => {
       const url = `https://github.com/aptos-labs/aptos-core/releases/download/${PNAME}-v${VERSION}/${PNAME}-${VERSION}-${os}-x86_64.zip`;
-      console.log("Downloading aptos CLI...");
+      console.log(`Downloading aptos CLI version ${VERSION}`);
       let downloadProcess;
       if (os === "Windows") {
         downloadProcess = spawn(
