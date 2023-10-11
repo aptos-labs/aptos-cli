@@ -5,7 +5,7 @@ const fs = require("fs");
 const os = require("os");
 
 const PNAME = "aptos-cli";
-const VERSION = "2.0.2";
+const VERSION = "2.2.0";
 
 // Get all arguments passed to the script
 const getOS = () => {
