@@ -1,17 +1,26 @@
 #!/usr/bin/env node
 
+// On MacOS we install the CLI with brew. There are two main reasons for this:
+// 1. Brew builds the CLI for the native CPU architecture for the user, which
+//    eliminates any issues arising from using x86 binaries on ARM machines.
+// 2. Brew handles dependency management for us. This isn't relevant right now but
+//    might become necessary later if we reintroduce OpenSSL as a dep for the CLI.
+//
+// On Linux and Windows we just query the GH API for the latest CLI release and
+// download and extract that.
+
 const { execSync, spawn } = require("child_process");
 const fs = require("fs");
 const os = require("os");
 
 const PNAME = "aptos-cli";
-const VERSION = "2.3.1";
 
+// Wrapper around execSync that uses the shell.
 const execSyncShell = (command, options) => {
   return execSync(command, { shell: true, ...options });
 }
 
-// Get all arguments passed to the script
+// Determine what OS we're running on.
 const getOS = () => {
   const platform = os.platform();
   switch (platform) {
@@ -37,6 +46,28 @@ const executableIsAvailable = (name) => {
   }
 }
 
+// Query the GitHub API to find the latest CLI release. We assume that the CLI is in
+// the last 100 releases so we don't paginate through the releases.
+const getLatestVersionGh = async () => {
+  const prefix = `${PNAME}-}`;
+  const response = await (await fetch("https://api.github.com/repos/aptos-labs/aptos-core/releases?per_page=100")).json();
+  for (release of response) {
+    if (release["tag_name"].startsWith(`${prefix}`)) {
+      return release.tag_name.replace(`${prefix}`, "");
+    }
+  }
+  throw "Could not determine latest version of Aptos CLI";
+}
+
+// Use brew to find the latest version of the CLI. Make sure to confirm that brew
+// is installed before calling this function.
+const getLatestVersionBrew = () => {
+  const out = JSON.parse(execSyncShell("brew info --json aptos", { encoding: "utf8" }));
+  return out[0].versions.stable;
+}
+
+// Based on the installation path of the aptos formula, determine the path where the
+// CLI should be installed.
 const getCliPathBrew = () => {
   const directory = execSyncShell("brew --prefix aptos", { encoding: "utf8" }).toString().trim();
   return `${directory}/bin/aptos`;
@@ -44,7 +75,6 @@ const getCliPathBrew = () => {
 
 const main = async () => {
   const os = getOS();
-  const binaryName = `${PNAME}-${VERSION}-${os}`;
 
   let path;
   if (os === "MacOS") {
@@ -54,31 +84,39 @@ const main = async () => {
       throw "Please install brew to continue: https://brew.sh/";
     }
     try {
-      // Get the path of where the Aptos stuff is installed, if any.
       path = getCliPathBrew();
     } catch (e) {
       path = "";
     }
   } else {
-    path = `${__dirname}/${binaryName}`;
+    path = `${__dirname}/${PNAME}`;
   }
 
   // If binary does not exist, download it.
   if (!fs.existsSync(path)) {
-    const url = `https://github.com/aptos-labs/aptos-core/releases/download/${PNAME}-v${VERSION}/${PNAME}-${VERSION}-${os}-x86_64.zip`;
+    // Look up the latest version.
+    let latestVersion;
+    if (os === "MacOS") {
+      latestVersion = getLatestVersionBrew();
+    } else {
+      latestVersion = await getLatestVersionGh();
+    }
+
+    const url = `https://github.com/aptos-labs/aptos-core/releases/download/${PNAME}-v${latestVersion}/${PNAME}-${latestVersion}-${os}-x86_64.zip`;
+
+    console.log(`Downloading aptos CLI version ${latestVersion}`);
     if (os === "Windows") {
-      console.log(`Downloading aptos CLI version ${VERSION}`);
+      // Download the zip file, extract it, and move the binary to the correct location.
       execSync(
         `curl -L -o C:/tmp/aptos.zip ${url} & powershell Expand-Archive -Path C:/tmp/aptos.zip -DestinationPath C:/tmp -Force & move C:\\tmp\\aptos.exe ${path}`,
       );
     } else if (os === "MacOS") {
-      console.log(`Downloading aptos CLI with brew`);
       // Install the CLI with brew.
       execSyncShell("brew install aptos");
-      // Get the path of the CLI
+      // Get the path of the CLI.
       path = getCliPathBrew();
     } else {
-      console.log(`Downloading aptos CLI version ${VERSION}`);
+      // Download the zip file, extract it, and move the binary to the correct location.
       execSync(
         `curl -L -o /tmp/aptos.zip ${url}; unzip -o -q /tmp/aptos.zip -d /tmp; mv /tmp/aptos ${path};`,
       );
