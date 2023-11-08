@@ -49,7 +49,7 @@ const executableIsAvailable = (name) => {
 // Query the GitHub API to find the latest CLI release. We assume that the CLI is in
 // the last 100 releases so we don't paginate through the releases.
 const getLatestVersionGh = async () => {
-  const prefix = `${PNAME}-}`;
+  const prefix = `${PNAME}-`;
   const response = await (await fetch("https://api.github.com/repos/aptos-labs/aptos-core/releases?per_page=100")).json();
   for (release of response) {
     if (release["tag_name"].startsWith(`${prefix}`)) {
