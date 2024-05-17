@@ -96,8 +96,10 @@ const main = async () => {
     } catch (e) {
       path = "";
     }
-  } else {
+  } else if (os === "Windows") {
     path = `${__dirname}\\${PNAME}.exe`;
+  } else {
+    path = `${__dirname}/${PNAME}`;
   }
 
   // If binary does not exist, download it.
