@@ -89,7 +89,7 @@ const main = async () => {
       path = "";
     }
   } else {
-    path = `${__dirname}/${PNAME}`;
+    path = `${__dirname}\\${PNAME}.exe`;
   }
 
   // If binary does not exist, download it.
@@ -108,7 +108,7 @@ const main = async () => {
     if (os === "Windows") {
       // Download the zip file, extract it, and move the binary to the correct location.
       execSync(
-        `curl -L -o C:/tmp/aptos.zip ${url} & powershell Expand-Archive -Path C:/tmp/aptos.zip -DestinationPath C:/tmp -Force & move C:\\tmp\\aptos.exe ${path}`,
+        `curl -L -o C:/tmp/aptos.zip ${url} & powershell Expand-Archive -Path C:/tmp/aptos.zip -DestinationPath C:/tmp -Force & move C:\\tmp\\aptos.exe ${path}.exe`,
       );
     } else if (os === "MacOS") {
       // Install the CLI with brew.
@@ -126,6 +126,7 @@ const main = async () => {
   // Spawn a child process to execute the binary with the provided arguments.
   spawn(path, process.argv.slice(2), {
     stdio: "inherit",
+    shell:true
   });
 };
 
