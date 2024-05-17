@@ -18,7 +18,7 @@ const PNAME = "aptos-cli";
 // Wrapper around execSync that uses the shell.
 const execSyncShell = (command, options) => {
   return execSync(command, { shell: true, ...options });
-}
+};
 
 // Determine what OS we're running on.
 const getOS = () => {
@@ -44,34 +44,42 @@ const executableIsAvailable = (name) => {
   } catch (error) {
     return false;
   }
-}
+};
 
 // Query the GitHub API to find the latest CLI release. We assume that the CLI is in
 // the last 100 releases so we don't paginate through the releases.
 const getLatestVersionGh = async () => {
   const prefix = `${PNAME}-v`;
-  const response = await (await fetch("https://api.github.com/repos/aptos-labs/aptos-core/releases?per_page=100")).json();
+  const response = await (
+    await fetch(
+      "https://api.github.com/repos/aptos-labs/aptos-core/releases?per_page=100"
+    )
+  ).json();
   for (release of response) {
     if (release["tag_name"].startsWith(`${prefix}`)) {
       return release.tag_name.replace(`${prefix}`, "");
     }
   }
   throw "Could not determine latest version of Aptos CLI";
-}
+};
 
 // Use brew to find the latest version of the CLI. Make sure to confirm that brew
 // is installed before calling this function.
 const getLatestVersionBrew = () => {
-  const out = JSON.parse(execSyncShell("brew info --json aptos", { encoding: "utf8" }));
+  const out = JSON.parse(
+    execSyncShell("brew info --json aptos", { encoding: "utf8" })
+  );
   return out[0].versions.stable;
-}
+};
 
 // Based on the installation path of the aptos formula, determine the path where the
 // CLI should be installed.
 const getCliPathBrew = () => {
-  const directory = execSyncShell("brew --prefix aptos", { encoding: "utf8" }).toString().trim();
+  const directory = execSyncShell("brew --prefix aptos", { encoding: "utf8" })
+    .toString()
+    .trim();
   return `${directory}/bin/aptos`;
-}
+};
 
 const main = async () => {
   const os = getOS();
@@ -108,7 +116,7 @@ const main = async () => {
     if (os === "Windows") {
       // Download the zip file, extract it, and move the binary to the correct location.
       execSync(
-        `curl -L -o C:/tmp/aptos.zip ${url} & powershell Expand-Archive -Path C:/tmp/aptos.zip -DestinationPath C:/tmp -Force & move C:\\tmp\\aptos.exe ${path}.exe`,
+        `curl -L -o C:/tmp/aptos.zip ${url} & powershell Expand-Archive -Path C:/tmp/aptos.zip -DestinationPath C:/tmp -Force & move C:\\tmp\\aptos.exe ${path}.exe`
       );
     } else if (os === "MacOS") {
       // Install the CLI with brew.
@@ -118,16 +126,22 @@ const main = async () => {
     } else {
       // Download the zip file, extract it, and move the binary to the correct location.
       execSync(
-        `curl -L -o /tmp/aptos.zip ${url}; unzip -o -q /tmp/aptos.zip -d /tmp; mv /tmp/aptos ${path};`,
+        `curl -L -o /tmp/aptos.zip ${url}; unzip -o -q /tmp/aptos.zip -d /tmp; mv /tmp/aptos ${path};`
       );
     }
   }
 
   // Spawn a child process to execute the binary with the provided arguments.
-  spawn(path, process.argv.slice(2), {
-    stdio: "inherit",
-    shell:true
-  });
+  if (os === "MacOS") {
+    spawn(path, process.argv.slice(2), {
+      stdio: "inherit",
+    });
+  } else {
+    spawn(path, process.argv.slice(2), {
+      stdio: "inherit",
+      shell: true,
+    });
+  }
 };
 
 main().catch(console.error);
