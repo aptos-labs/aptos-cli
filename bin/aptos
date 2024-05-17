@@ -132,14 +132,14 @@ const main = async () => {
   }
 
   // Spawn a child process to execute the binary with the provided arguments.
-  if (os === "MacOS") {
+  if (os === "Windows") {
     spawn(path, process.argv.slice(2), {
       stdio: "inherit",
+      shell: true,
     });
   } else {
     spawn(path, process.argv.slice(2), {
       stdio: "inherit",
-      shell: true,
     });
   }
 };
