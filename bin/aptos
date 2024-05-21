@@ -118,7 +118,7 @@ const main = async () => {
     if (os === "Windows") {
       // Download the zip file, extract it, and move the binary to the correct location.
       execSync(
-        `curl -L -o C:/tmp/aptos.zip ${url} & powershell Expand-Archive -Path C:/tmp/aptos.zip -DestinationPath C:/tmp -Force & move C:\\tmp\\aptos.exe ${path}.exe`
+        `curl -L -o C:/tmp/aptos.zip ${url} & powershell Expand-Archive -Path C:/tmp/aptos.zip -DestinationPath C:/tmp -Force & move C:\\tmp\\aptos.exe ${path}`
       );
     } else if (os === "MacOS") {
       // Install the CLI with brew.
