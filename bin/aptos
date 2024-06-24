@@ -157,7 +157,7 @@ const main = async () => {
       console.log(`A newer version of the CLI is available: ${latestVersion}`);
       installCli(os, path, latestVersion);
     } else {
-      console.log(`CLI is already up to date`);
+      console.log(`CLI is up to date`);
     }
   }
 
