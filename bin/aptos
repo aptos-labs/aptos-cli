@@ -98,7 +98,7 @@ const installCli = (os, path, latestVersion) => {
   if (os === "Windows") {
     // Download the zip file, extract it, and move the binary to the correct location.
     execSync(
-      `powershell -Command "Invoke-RestMethod -Uri ${url} -OutFile .\\aptos.zip; Expand-Archive -Path .\\aptos.zip -DestinationPath . -Force; Move-Item -Path .\\aptos\\aptos.exe -Destination ${path}"`
+      `powershell -Command "if (!(Test-Path -Path 'C:\\tmp')) { New-Item -ItemType Directory -Path 'C:\\tmp' } ; Invoke-RestMethod -Uri ${url} -OutFile C:\\tmp\\aptos.zip; Expand-Archive -Path C:\\tmp\\aptos.zip -DestinationPath C:\\tmp -Force; Move-Item -Path C:\\tmp\\aptos\\aptos.exe -Destination ${path}"`
     );
   } else if (os === "MacOS") {
     // Install the CLI with brew.
