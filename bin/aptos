@@ -14,6 +14,8 @@ const fs = require("fs");
 const os = require("os");
 
 const PNAME = "aptos-cli";
+const GH_CLI_DOWNLOAD_URL =
+  "https://github.com/aptos-labs/aptos-core/releases/download";
 
 // Wrapper around execSync that uses the shell.
 const execSyncShell = (command, options) => {
@@ -48,7 +50,7 @@ const executableIsAvailable = (name) => {
 
 // Query the GitHub API to find the latest CLI release. We assume that the CLI is in
 // the last 100 releases so we don't paginate through the releases.
-const getLatestVersionGh = async () => {
+const getLatestCLIVersionGh = async () => {
   const prefix = `${PNAME}-v`;
   const response = await (
     await fetch(
@@ -65,11 +67,16 @@ const getLatestVersionGh = async () => {
 
 // Use brew to find the latest version of the CLI. Make sure to confirm that brew
 // is installed before calling this function.
-const getLatestVersionBrew = () => {
+const getLatestCLIVersionBrew = () => {
   const out = JSON.parse(
     execSyncShell("brew info --json aptos", { encoding: "utf8" })
   );
   return out[0].versions.stable;
+};
+
+const getCurrentOpenSSLVersion = () => {
+  const out = execSyncShell("openssl version", { encoding: "utf8" });
+  return out.split(" ")[1].trim();
 };
 
 // Based on the installation path of the aptos formula, determine the path where the
@@ -104,18 +111,18 @@ const main = async () => {
 
   // If binary does not exist, download it.
   if (!fs.existsSync(path)) {
-    // Look up the latest version.
-    let latestVersion;
+    // Look up the latest CLI version.
+    let latestCLIVersion;
     if (os === "MacOS") {
-      latestVersion = getLatestVersionBrew();
+      latestCLIVersion = getLatestCLIVersionBrew();
     } else {
-      latestVersion = await getLatestVersionGh();
+      latestCLIVersion = await getLatestCLIVersionGh();
     }
 
-    const url = `https://github.com/aptos-labs/aptos-core/releases/download/${PNAME}-v${latestVersion}/${PNAME}-${latestVersion}-${os}-x86_64.zip`;
-
-    console.log(`Downloading aptos CLI version ${latestVersion}`);
+    console.log(`Downloading aptos CLI version ${latestCLIVersion}`);
     if (os === "Windows") {
+      const url = `${GH_CLI_DOWNLOAD_URL}/${PNAME}-v${latestCLIVersion}/${PNAME}-${latestCLIVersion}-${os}-x86_64.zip`;
+      console.log(`Downloading CLI binary ${os}-x86_64`);
       // Download the zip file, extract it, and move the binary to the correct location.
       execSync(
         `curl -L -o C:/tmp/aptos.zip ${url} & powershell Expand-Archive -Path C:/tmp/aptos.zip -DestinationPath C:/tmp -Force & move C:\\tmp\\aptos.exe ${path}`
@@ -126,6 +133,23 @@ const main = async () => {
       // Get the path of the CLI.
       path = getCliPathBrew();
     } else {
+      // On Linux, we check what version of OpenSSL we're working with to figure out
+      // which binary to download.
+      let osVersion = "x86_64";
+      let opensSslVersion = "1.0.0";
+      try {
+        opensSslVersion = getCurrentOpenSSLVersion();
+      } catch (error) {
+        console.log(
+          "Could not determine OpenSSL version, assuming older version (1.x.x)"
+        );
+      }
+
+      if (opensSslVersion.startswith("3.")) {
+        osVersion = "22.04-x86_64";
+      }
+      console.log(`Downloading CLI binary ${os}-${osVersion}`);
+      const url = `${GH_CLI_DOWNLOAD_URL}/${PNAME}-v${latestCLIVersion}/${PNAME}-${latestCLIVersion}-${os}-${osVersion}.zip`;
       // Download the zip file, extract it, and move the binary to the correct location.
       execSync(
         `curl -L -o /tmp/aptos.zip ${url}; unzip -o -q /tmp/aptos.zip -d /tmp; mv /tmp/aptos ${path};`

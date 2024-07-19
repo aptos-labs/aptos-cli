@@ -1,0 +1,39 @@
+name: Run bin script on Ubuntu, Windows, and macOS
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    concurrency: ci-${{ github.ref }}-${{ github.workflow }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run the bin script on Ubuntu
+        run: node bin/aptos
+
+  build-windows:
+    runs-on: windows-latest
+    concurrency: ci-${{ github.ref }}-${{ github.workflow }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run the bin script on Windows
+        run: node bin/aptos
+        shell: cmd
+
+  build-macos:
+    runs-on: macos-latest
+    concurrency: ci-${{ github.ref }}-${{ github.workflow }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run the bin script on macOS
+        run: node bin/aptos
