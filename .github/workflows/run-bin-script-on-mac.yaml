@@ -1,0 +1,18 @@
+name: Run bin script on Mac
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+    concurrency: ci-${{ github.ref }}-${{ github.workflow }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run the bin script on Mac
+        run: node bin/aptos

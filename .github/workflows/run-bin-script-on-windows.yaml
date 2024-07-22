@@ -1,0 +1,19 @@
+name: Run bin script on Windows
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+    concurrency: ci-${{ github.ref }}-${{ github.workflow }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run the bin script on Windows
+        run: node bin/aptos
+        shell: cmd
