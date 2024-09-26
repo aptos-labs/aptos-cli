@@ -1,8 +1,19 @@
 # Contributing
 
-## Testing
-To test changes to the script, do this:
+Clone this repo:
+
 ```
-pnpm install
-./bin/aptos
+git clone git@github.com:aptos-labs/aptos-cli.git
+```
+
+Install dependencies:
+
+```
+npm install
+```
+
+Run the bin file
+
+```
+npm run dev
 ```
