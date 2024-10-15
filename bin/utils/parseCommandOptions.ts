@@ -23,7 +23,6 @@ export const parseCommandOptions = async (
   const path = getLocalBinPath();
   if (!existsSync(path)) {
     await installCli();
-    return;
   }
   await runCLI(unknownOptions);
 };
