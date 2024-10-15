@@ -18,7 +18,7 @@
   "bugs": {
     "url": "https://github.com/aptos-labs/aptos-cli/issues"
   },
-  "license": "ISC",
+  "license": "Apache-2.0",
   "scripts": {
     "clean": "rm -rf dist",
     "build": "npm run clean && tsc",
