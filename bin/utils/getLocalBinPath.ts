@@ -1,7 +1,9 @@
+import { dirname } from "path";
 import { executableIsAvailable } from "./aptosExecutableIsAvailable.js";
 import { getCliPathBrew } from "./brewOperations.js";
 import { PNAME } from "./consts.js";
 import { getOS } from "./getUserOs.js";
+import { fileURLToPath } from "url";
 
 export const getLocalBinPath = () => {
   let path;
@@ -18,9 +20,9 @@ export const getLocalBinPath = () => {
       path = "";
     }
   } else if (os === "Windows") {
-    path = `${__dirname}\\${PNAME}.exe`;
+    path = `${dirname(fileURLToPath(import.meta.url))}\\${PNAME}.exe`;
   } else {
-    path = `${__dirname}/${PNAME}`;
+    path = `${dirname(fileURLToPath(import.meta.url))}/${PNAME}`;
   }
   return path;
 };
