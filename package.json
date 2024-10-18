@@ -1,6 +1,6 @@
 {
   "name": "@aptos-labs/aptos-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Aptos CLI available from npmjs",
   "bin": {
     "aptos": "./dist/aptos.js"
@@ -25,7 +25,8 @@
     "dev": "npm run build && node ./dist/aptos.js"
   },
   "files": [
-    "bin"
+    "bin",
+    "dist"
   ],
   "dependencies": {
     "commander": "^12.1.0"
