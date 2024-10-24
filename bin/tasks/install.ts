@@ -5,8 +5,8 @@ import { GH_CLI_DOWNLOAD_URL, PNAME } from "../utils/consts.js";
 import { execSyncShell } from "../utils/execSyncShell.js";
 import { getCurrentOpenSSLVersion } from "../utils/versions.js";
 import { getOS } from "../utils/getUserOs.js";
-import { getLatestVersion } from "../utils/getAptosCliLatestVersion.js";
 import { getLocalBinPath } from "../utils/getLocalBinPath.js";
+import { getLatestVersionGh } from "../utils/ghOperations.js";
 
 // Install the CLI.
 export const installCli = async () => {
@@ -16,7 +16,7 @@ export const installCli = async () => {
     return;
   }
   // Look up the latest version.
-  const latestCLIVersion = await getLatestVersion();
+  const latestCLIVersion = await getLatestVersionGh();
   console.log(`Downloading aptos CLI version ${latestCLIVersion}`);
   const os = getOS();
 
