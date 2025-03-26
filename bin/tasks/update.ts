@@ -33,7 +33,7 @@ export const updateCli = async () => {
       console.log(
         `A newer version of the CLI is available: ${latestVersion}, installing...`
       );
-      installCli();
+      await installCli();
     } else {
       console.log(`CLI is up to date`);
     }
