@@ -65,3 +65,6 @@ To build the project:
 ```bash
 npm run build
 ```
+
+
+[Note]: Added CLI usage example for aptos-cli.
