@@ -21,11 +21,7 @@ export const parseCommandOptions = async (
 
   // if no flags are set, install and run the cli
   const path = options.binaryPath || getLocalBinPath();
-  if (!existsSync(path)) {
-    if (options.binaryPath) {
-      console.error(`Error: Binary not found at specified path: ${options.binaryPath}`);
-      process.exit(1);
-    }
+  if (!options.binaryPath && !existsSync(path)) {
     await installCli();
   }
   await runCLI(unknownOptions, options.binaryPath);

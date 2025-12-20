@@ -7,6 +7,10 @@ import { getLocalBinPath } from "../utils/getLocalBinPath.js";
 export const runCLI = async (args: string[] = [], binaryPath?: string) => {
   const path = binaryPath || getLocalBinPath();
   if (!existsSync(path)) {
+    if (binaryPath) {
+      console.error(`Error: Binary not found at specified path: ${binaryPath}`);
+      process.exit(1);
+    }
     console.log(
       "Aptos CLI not installed, run `npx aptos --install` to install"
     );
