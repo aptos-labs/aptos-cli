@@ -4,8 +4,8 @@ import { existsSync } from "fs";
 import { getOS } from "../utils/getUserOs.js";
 import { getLocalBinPath } from "../utils/getLocalBinPath.js";
 
-export const runCLI = async (args: string[] = []) => {
-  const path = getLocalBinPath();
+export const runCLI = async (args: string[] = [], binaryPath?: string) => {
+  const path = binaryPath || getLocalBinPath();
   if (!existsSync(path)) {
     console.log(
       "Aptos CLI not installed, run `npx aptos --install` to install"

@@ -19,6 +19,7 @@ program
   .helpOption(false)
   .option("-i, --install", "install the latest version of the CLI")
   .option("-u, --update", "update the CLI to the latest version")
+  .option("-b, --binary-path <path>", "path to an existing Aptos CLI binary")
   .allowUnknownOption();
 
 program.parse(process.argv);
@@ -27,13 +28,14 @@ const main = async () => {
   const options = {
     install: program.opts().install,
     update: program.opts().update,
+    binaryPath: program.opts().binaryPath,
   };
   const unknownOptions = program.args;
 
   // Manually check for `--help` and handle the CLI `--help`
   if (process.argv.includes("--help")) {
     // Forward to the CLI
-    return runCLI(unknownOptions);
+    return runCLI(unknownOptions, options.binaryPath);
   }
 
   await parseCommandOptions(options, unknownOptions);

@@ -34,6 +34,25 @@ To use the Aptos CLI, in your project environment, run the `npx aptos` command, 
 npx aptos
 ```
 
+### Using a Custom Binary
+
+If you already have the Aptos CLI binary installed on your system, you can use it directly without installing it again by specifying the path to the binary:
+
+```bash
+npx aptos --binary-path /path/to/aptos <command>
+```
+
+For example, if you have the Aptos CLI installed globally via brew on macOS:
+
+```bash
+npx aptos --binary-path /opt/homebrew/bin/aptos account list
+```
+
+This is useful if:
+- You already have the Aptos CLI installed elsewhere on your system
+- You want to use a custom build of the CLI
+- You want to avoid downloading and installing multiple copies of the binary
+
 ## Updating the Aptos CLI
 
 To update the Aptos CLI, you can run the following command within your project environment:
