@@ -42,10 +42,21 @@ If you already have the Aptos CLI binary installed on your system, you can use i
 npx aptos --binary-path /path/to/aptos <command>
 ```
 
-For example, if you have the Aptos CLI installed globally via brew on macOS:
+**Examples:**
 
+If you have the Aptos CLI installed globally via brew on macOS:
 ```bash
 npx aptos --binary-path /opt/homebrew/bin/aptos account list
+```
+
+If you have the Aptos CLI in `/usr/local/bin` on Linux:
+```bash
+npx aptos --binary-path /usr/local/bin/aptos init
+```
+
+You can also use the short form `-b`:
+```bash
+npx aptos -b /path/to/aptos move compile
 ```
 
 This is useful if:
