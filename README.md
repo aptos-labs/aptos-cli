@@ -36,33 +36,11 @@ npx aptos
 
 ### Using a Custom Binary
 
-If you already have the Aptos CLI binary installed on your system, you can use it directly without installing it again by specifying the path to the binary:
+If you already have the Aptos CLI binary installed on your system, you can specify its path to use it directly:
 
 ```bash
 npx aptos --binary-path /path/to/aptos <command>
 ```
-
-**Examples:**
-
-If you have the Aptos CLI installed globally via brew on macOS:
-```bash
-npx aptos --binary-path /opt/homebrew/bin/aptos account list
-```
-
-If you have the Aptos CLI in `/usr/local/bin` on Linux:
-```bash
-npx aptos --binary-path /usr/local/bin/aptos init
-```
-
-You can also use the short form `-b`:
-```bash
-npx aptos -b /path/to/aptos move compile
-```
-
-This is useful if:
-- You already have the Aptos CLI installed elsewhere on your system
-- You want to use a custom build of the CLI
-- You want to avoid downloading and installing multiple copies of the binary
 
 ## Updating the Aptos CLI
 
