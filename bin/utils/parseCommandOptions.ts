@@ -5,7 +5,7 @@ import { updateCli } from "../tasks/update.js";
 import { getLocalBinPath } from "./getLocalBinPath.js";
 
 export const parseCommandOptions = async (
-  options: { install: boolean; update: boolean },
+  options: { install: boolean; update: boolean; binaryPath?: string },
   unknownOptions: string[]
 ) => {
   // if `--install` flag is set, only install the cli and dont run it
@@ -20,9 +20,9 @@ export const parseCommandOptions = async (
   }
 
   // if no flags are set, install and run the cli
-  const path = getLocalBinPath();
-  if (!existsSync(path)) {
+  const path = options.binaryPath || getLocalBinPath();
+  if (!options.binaryPath && !existsSync(path)) {
     await installCli();
   }
-  await runCLI(unknownOptions);
+  await runCLI(unknownOptions, options.binaryPath);
 };
