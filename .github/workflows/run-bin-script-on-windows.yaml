@@ -27,6 +27,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Run tests
+        run: npm test
+
       - name: Display system info
         shell: pwsh
         run: |

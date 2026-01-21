@@ -22,7 +22,9 @@
   "scripts": {
     "clean": "node -e \"const fs = require('fs'); fs.rmSync('dist', { recursive: true, force: true });\"",
     "build": "npm run clean && tsc",
-    "dev": "npm run build && node ./dist/aptos.js"
+    "dev": "npm run build && node ./dist/aptos.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "files": [
     "bin",
@@ -33,6 +35,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.5.0",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vitest": "^4.0.17"
   }
 }
