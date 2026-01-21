@@ -7,17 +7,38 @@ import { GH_CLI_DOWNLOAD_URL, PNAME } from "../utils/consts.js";
 import { getOS, getTargetPlatform } from "../utils/getUserOs.js";
 import { getLocalBinPath, getBinDir } from "../utils/getLocalBinPath.js";
 import { getLatestVersionGh } from "../utils/ghOperations.js";
+import {
+  isBrewAvailable,
+  isInstalledViaBrew,
+  installViaBrew,
+} from "../utils/brewOperations.js";
 
 /**
  * Install the Aptos CLI.
- * Downloads the appropriate binary for the current platform from GitHub releases.
- * Follows the same logic as the official install scripts:
+ *
+ * Installation priority:
+ * 1. On macOS with Homebrew available: Use `brew install aptos`
+ * 2. Otherwise: Download binary directly from GitHub releases
+ *
+ * This follows the same logic as the official install scripts:
  * - https://aptos.dev/scripts/install_cli.sh
  * - https://aptos.dev/scripts/install_cli.ps1
  */
 export const installCli = async (): Promise<void> => {
-  const binaryPath = getLocalBinPath();
+  const os = getOS();
 
+  // On macOS, prefer Homebrew if available
+  if (os === "MacOS" && isBrewAvailable()) {
+    if (isInstalledViaBrew()) {
+      console.log("Aptos CLI is already installed via Homebrew");
+      return;
+    }
+    installViaBrew();
+    return;
+  }
+
+  // For non-Homebrew installation, check if binary already exists
+  const binaryPath = getLocalBinPath();
   if (existsSync(binaryPath)) {
     console.log("Aptos CLI is already installed");
     return;
@@ -40,7 +61,6 @@ export const installCli = async (): Promise<void> => {
   // Build download URL matching official release artifact naming
   const url = `${GH_CLI_DOWNLOAD_URL}/${PNAME}-v${latestVersion}/${PNAME}-${latestVersion}-${targetPlatform}.zip`;
 
-  const os = getOS();
   const tempDir = tmpdir();
 
   try {
@@ -55,7 +75,7 @@ export const installCli = async (): Promise<void> => {
         { stdio: "inherit" }
       );
     } else {
-      // macOS and Linux installation using curl/unzip
+      // macOS (without Homebrew) and Linux installation using curl/unzip
       const zipPath = join(tempDir, "aptos-cli.zip");
 
       // Download

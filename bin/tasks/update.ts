@@ -4,11 +4,14 @@ import { getLocalBinPath } from "../utils/getLocalBinPath.js";
 import { getLatestVersionGh } from "../utils/ghOperations.js";
 import { execSyncShell } from "../utils/execSyncShell.js";
 import { installCli } from "./install.js";
+import { isInstalledViaBrew, updateViaBrew } from "../utils/brewOperations.js";
 
 /**
  * Update the Aptos CLI to the latest version.
- * Compares the currently installed version with the latest release on GitHub
- * and reinstalls if a newer version is available.
+ *
+ * If installed via Homebrew, uses `brew upgrade aptos`.
+ * Otherwise, compares the currently installed version with the latest release
+ * on GitHub and reinstalls if a newer version is available.
  */
 export const updateCli = async (): Promise<void> => {
   const binaryPath = getLocalBinPath();
@@ -17,6 +20,12 @@ export const updateCli = async (): Promise<void> => {
     console.log(
       "Aptos CLI not installed, run `npx aptos --install` to install"
     );
+    return;
+  }
+
+  // If installed via Homebrew, use brew upgrade
+  if (isInstalledViaBrew()) {
+    updateViaBrew();
     return;
   }
 
@@ -32,7 +41,7 @@ export const updateCli = async (): Promise<void> => {
     ).trim();
     // Version output format: "aptos X.Y.Z"
     currentVersion = versionOutput.split(" ")[1] || "";
-  } catch (error) {
+  } catch {
     console.error("Warning: Could not determine current CLI version");
     currentVersion = "";
   }
@@ -50,7 +59,7 @@ export const updateCli = async (): Promise<void> => {
   // Remove the old binary before installing the new one
   try {
     unlinkSync(binaryPath);
-  } catch (error) {
+  } catch {
     console.error(`Warning: Could not remove old binary at ${binaryPath}`);
   }
 

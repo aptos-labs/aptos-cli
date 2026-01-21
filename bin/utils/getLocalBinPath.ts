@@ -1,6 +1,7 @@
 import { join } from "path";
 import { homedir } from "os";
 import { getOS } from "./getUserOs.js";
+import { isInstalledViaBrew, getCliPathBrew } from "./brewOperations.js";
 
 /**
  * Get the binary directory path where the CLI should be installed.
@@ -22,11 +23,26 @@ export const getBinDir = (): string => {
 
 /**
  * Get the full path to the Aptos CLI binary.
+ *
+ * On macOS, checks for Homebrew installation first and uses that path if available.
+ * Otherwise uses the standard paths:
  * - macOS/Linux: ~/.local/bin/aptos
  * - Windows: $USERPROFILE\.aptoscli\bin\aptos.exe
  */
 export const getLocalBinPath = (): string => {
   const os = getOS();
+
+  // On macOS, prefer Homebrew installation if it exists
+  if (os === "MacOS") {
+    if (isInstalledViaBrew()) {
+      try {
+        return getCliPathBrew();
+      } catch {
+        // Fall through to default path
+      }
+    }
+  }
+
   const binDir = getBinDir();
   const binaryName = os === "Windows" ? "aptos.exe" : "aptos";
   return join(binDir, binaryName);
