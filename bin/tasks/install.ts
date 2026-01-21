@@ -1,103 +1,96 @@
 import { execSync } from "child_process";
-import { existsSync, chmodSync, mkdirSync, unlinkSync } from "fs";
-import { dirname } from "path";
+import { existsSync, chmodSync, mkdirSync } from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
 
 import { GH_CLI_DOWNLOAD_URL, PNAME } from "../utils/consts.js";
-import { execSyncShell } from "../utils/execSyncShell.js";
-import { getCurrentOpenSSLVersion } from "../utils/versions.js";
-import { getOS } from "../utils/getUserOs.js";
-import { getLocalBinPath } from "../utils/getLocalBinPath.js";
+import { getOS, getTargetPlatform } from "../utils/getUserOs.js";
+import { getLocalBinPath, getBinDir } from "../utils/getLocalBinPath.js";
 import { getLatestVersionGh } from "../utils/ghOperations.js";
 
 /**
- * Clean up temporary files created during installation.
- */
-const cleanupTempFiles = (os: string): void => {
-  try {
-    if (os === "Windows") {
-      // Clean up Windows temp files
-      if (existsSync("C:\\tmp\\aptos.zip")) {
-        unlinkSync("C:\\tmp\\aptos.zip");
-      }
-    } else {
-      // Clean up Unix temp files
-      if (existsSync("/tmp/aptos.zip")) {
-        unlinkSync("/tmp/aptos.zip");
-      }
-    }
-  } catch (error) {
-    // Ignore cleanup errors - not critical
-  }
-};
-
-/**
- * Install the CLI.
+ * Install the Aptos CLI.
+ * Downloads the appropriate binary for the current platform from GitHub releases.
+ * Follows the same logic as the official install scripts:
+ * - https://aptos.dev/scripts/install_cli.sh
+ * - https://aptos.dev/scripts/install_cli.ps1
  */
 export const installCli = async (): Promise<void> => {
-  const path = getLocalBinPath();
-  if (existsSync(path)) {
+  const binaryPath = getLocalBinPath();
+
+  if (existsSync(binaryPath)) {
     console.log("Aptos CLI is already installed");
     return;
   }
 
-  // Ensure the parent directory exists
-  const parentDir = dirname(path);
-  if (parentDir && !existsSync(parentDir)) {
-    mkdirSync(parentDir, { recursive: true });
+  // Ensure the bin directory exists
+  const binDir = getBinDir();
+  if (!existsSync(binDir)) {
+    mkdirSync(binDir, { recursive: true });
   }
 
-  // Look up the latest version.
-  const latestCLIVersion = await getLatestVersionGh();
-  console.log(`Downloading aptos CLI version ${latestCLIVersion}`);
+  // Look up the latest version
+  const latestVersion = await getLatestVersionGh();
+  const targetPlatform = getTargetPlatform();
+
+  console.log(
+    `Downloading Aptos CLI version ${latestVersion} for ${targetPlatform}...`
+  );
+
+  // Build download URL matching official release artifact naming
+  const url = `${GH_CLI_DOWNLOAD_URL}/${PNAME}-v${latestVersion}/${PNAME}-${latestVersion}-${targetPlatform}.zip`;
+
   const os = getOS();
+  const tempDir = tmpdir();
 
   try {
     if (os === "Windows") {
-      const url = `${GH_CLI_DOWNLOAD_URL}/${PNAME}-v${latestCLIVersion}/${PNAME}-${latestCLIVersion}-${os}-x86_64.zip`;
-      // Download the zip file, extract it, and move the binary to the correct location.
-      // Use $env:TEMP for a more reliable temp directory on Windows
+      // Windows installation using PowerShell
+      const zipPath = join(tempDir, "aptos-cli.zip");
       execSync(
-        `powershell -Command "$tmpDir = $env:TEMP; ` +
-          `Invoke-RestMethod -Uri '${url}' -OutFile '$tmpDir\\aptos.zip'; ` +
-          `Expand-Archive -Path '$tmpDir\\aptos.zip' -DestinationPath '$tmpDir' -Force; ` +
-          `Move-Item -Path '$tmpDir\\aptos.exe' -Destination '${path}' -Force; ` +
-          `Remove-Item -Path '$tmpDir\\aptos.zip' -Force"`,
+        `powershell -Command "` +
+          `Invoke-WebRequest -Uri '${url}' -OutFile '${zipPath}'; ` +
+          `Expand-Archive -Path '${zipPath}' -DestinationPath '${binDir}' -Force; ` +
+          `Remove-Item -Path '${zipPath}' -Force"`,
         { stdio: "inherit" }
       );
-    } else if (os === "MacOS") {
-      // Install the CLI with brew.
-      execSyncShell("brew install aptos", { stdio: "inherit" });
     } else {
-      // On Linux, we check what version of OpenSSL we're working with to figure out
-      // which binary to download.
-      let osVersion = "x86_64";
-      let opensSslVersion = "1.0.0";
-      try {
-        opensSslVersion = getCurrentOpenSSLVersion();
-      } catch (error) {
-        console.log(
-          "Could not determine OpenSSL version, assuming older version (1.x.x)"
-        );
-      }
+      // macOS and Linux installation using curl/unzip
+      const zipPath = join(tempDir, "aptos-cli.zip");
 
-      if (opensSslVersion.startsWith("3.")) {
-        osVersion = "22.04-x86_64";
+      // Download
+      execSync(`curl -L -o "${zipPath}" "${url}"`, { stdio: "inherit" });
+
+      // Extract
+      execSync(`unzip -o -q "${zipPath}" -d "${tempDir}"`, { stdio: "inherit" });
+
+      // Move binary to bin directory
+      const extractedBinary = join(tempDir, "aptos");
+      execSync(`mv "${extractedBinary}" "${binaryPath}"`, { stdio: "inherit" });
+
+      // Set executable permissions
+      chmodSync(binaryPath, 0o755);
+
+      // Clean up
+      try {
+        execSync(`rm -f "${zipPath}"`, { stdio: "ignore" });
+      } catch {
+        // Ignore cleanup errors
       }
-      console.log(`Downloading CLI binary ${os}-${osVersion}`);
-      const url = `${GH_CLI_DOWNLOAD_URL}/${PNAME}-v${latestCLIVersion}/${PNAME}-${latestCLIVersion}-${os}-${osVersion}.zip`;
-      // Download the zip file, extract it, and move the binary to the correct location.
-      execSyncShell(
-        `curl -L -o /tmp/aptos.zip "${url}" && unzip -o -q /tmp/aptos.zip -d /tmp && mv /tmp/aptos "${path}"`,
-        { stdio: "inherit" }
+    }
+
+    console.log(`Aptos CLI installed successfully to ${binaryPath}`);
+
+    // Remind user about PATH if needed
+    if (os !== "Windows") {
+      console.log(
+        `\nMake sure ${binDir} is in your PATH. You can add it by running:`
       );
-      // Set executable permissions on the binary
-      chmodSync(path, 0o755);
-      // Clean up temp files
-      cleanupTempFiles(os);
+      console.log(`  export PATH="${binDir}:$PATH"`);
     }
   } catch (error) {
-    // Clean up on failure
-    cleanupTempFiles(os);
-    throw error;
+    throw new Error(
+      `Failed to install Aptos CLI: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 };

@@ -1,34 +1,33 @@
-import { dirname, join } from "path";
-import { executableIsAvailable } from "./aptosExecutableIsAvailable.js";
-import { getCliPathBrew } from "./brewOperations.js";
-import { PNAME } from "./consts.js";
+import { join } from "path";
+import { homedir } from "os";
 import { getOS } from "./getUserOs.js";
-import { fileURLToPath } from "url";
 
 /**
- * Get the path to the locally installed Aptos CLI binary.
- * - On macOS: Uses Homebrew installation path
- * - On Windows: Binary stored in the dist directory with .exe extension
- * - On Linux: Binary stored in the dist directory
+ * Get the binary directory path where the CLI should be installed.
+ * Matches the official Aptos CLI install scripts:
+ * - macOS/Linux: ~/.local/bin
+ * - Windows: $USERPROFILE\.aptoscli\bin
+ */
+export const getBinDir = (): string => {
+  const os = getOS();
+
+  if (os === "Windows") {
+    // Match official Windows script: $env:USERPROFILE\.aptoscli\bin
+    return join(homedir(), ".aptoscli", "bin");
+  }
+
+  // Match official Unix script: $HOME/.local/bin
+  return join(homedir(), ".local", "bin");
+};
+
+/**
+ * Get the full path to the Aptos CLI binary.
+ * - macOS/Linux: ~/.local/bin/aptos
+ * - Windows: $USERPROFILE\.aptoscli\bin\aptos.exe
  */
 export const getLocalBinPath = (): string => {
   const os = getOS();
-
-  if (os === "MacOS") {
-    // Confirm brew is installed.
-    const brewInstalled = executableIsAvailable("brew");
-    if (!brewInstalled) {
-      throw new Error("Please install brew to continue: https://brew.sh/");
-    }
-    try {
-      return getCliPathBrew();
-    } catch {
-      return "";
-    }
-  }
-
-  // For Windows and Linux, store the binary in the same directory as this script
-  const scriptDir = dirname(fileURLToPath(import.meta.url));
-  const binaryName = os === "Windows" ? `${PNAME}.exe` : PNAME;
-  return join(scriptDir, binaryName);
+  const binDir = getBinDir();
+  const binaryName = os === "Windows" ? "aptos.exe" : "aptos";
+  return join(binDir, binaryName);
 };

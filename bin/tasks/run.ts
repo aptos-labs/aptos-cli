@@ -1,7 +1,7 @@
 import { spawn } from "child_process";
 import { existsSync } from "fs";
 
-import { getOS } from "../utils/getUserOs.js";
+import { getPlatformInfo } from "../utils/getUserOs.js";
 import { getLocalBinPath } from "../utils/getLocalBinPath.js";
 
 /**
@@ -13,8 +13,9 @@ export const runCLI = async (
   args: string[] = [],
   binaryPath?: string
 ): Promise<void> => {
-  const path = binaryPath || getLocalBinPath();
-  if (!existsSync(path)) {
+  const cliPath = binaryPath || getLocalBinPath();
+
+  if (!existsSync(cliPath)) {
     if (binaryPath) {
       console.error(`Error: Binary not found at specified path: ${binaryPath}`);
       process.exit(1);
@@ -24,11 +25,12 @@ export const runCLI = async (
     );
     return;
   }
-  const os = getOS();
+
+  const { os } = getPlatformInfo();
 
   // Spawn a child process to run the real CLI executable with the forwarded arguments
-  spawn(path, args, {
+  spawn(cliPath, args, {
     stdio: "inherit", // Forward the stdio so output is visible
-    shell: os === "Windows", // Use shell on Windows for proper path handling
+    shell: os === "windows", // Use shell on Windows for proper path handling
   });
 };
