@@ -93,57 +93,62 @@ jobs:
           node ./dist/aptos.js --update
 
   test-arm64:
-    name: Ubuntu ARM64 (Docker)
-    runs-on: ubuntu-latest
-    concurrency: ci-${{ github.ref }}-ubuntu-arm64-docker
+    name: Ubuntu 24.04 (ARM64)
+    runs-on: ubuntu-24.04-arm
+    concurrency: ci-${{ github.ref }}-ubuntu-arm64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up QEMU for ARM64
-        uses: docker/setup-qemu-action@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          platforms: arm64
+          node-version: "20"
+          cache: "npm"
 
-      - name: Run ARM64 tests in Docker
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Display system info
+        run: |
+          echo "=== OS Release ==="
+          cat /etc/os-release
+          echo ""
+          echo "=== Architecture ==="
+          uname -m
+
+      - name: Test CLI installation
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          docker run --rm --platform linux/arm64 \
-            -v "$PWD":/workspace \
-            -w /workspace \
-            -e GITHUB_TOKEN="$GITHUB_TOKEN" \
-            node:20-bookworm \
-            bash -c '
-              set -e
-              echo "=== System Info ==="
-              uname -m
-              cat /etc/os-release
-              
-              echo ""
-              echo "=== Installing dependencies ==="
-              npm ci
-              
-              echo ""
-              echo "=== Building ==="
-              npm run build
-              
-              echo ""
-              echo "=== Testing CLI installation ==="
-              node ./dist/aptos.js --install
-              
-              echo ""
-              echo "=== Verifying installation ==="
-              ls -la ~/.local/bin/aptos
-              ~/.local/bin/aptos --version
-              
-              echo ""
-              echo "=== Verifying ARM64 binary ==="
-              file ~/.local/bin/aptos
-              file ~/.local/bin/aptos | grep -q "aarch64\|ARM" && echo "✓ Correct ARM64 binary" || (echo "✗ Wrong architecture" && exit 1)
-              
-              echo ""
-              echo "=== Testing CLI commands ==="
-              node ./dist/aptos.js --version
-              node ./dist/aptos.js info
-            '
+          echo "Testing CLI installation..."
+          node ./dist/aptos.js --install
+
+      - name: Verify CLI was installed
+        run: |
+          echo "Checking installation path..."
+          ls -la ~/.local/bin/aptos
+          echo ""
+          echo "CLI version:"
+          ~/.local/bin/aptos --version
+          echo ""
+          echo "File type:"
+          file ~/.local/bin/aptos
+
+      - name: Verify correct architecture binary
+        run: |
+          echo "Verifying binary architecture..."
+          file ~/.local/bin/aptos | grep -q "aarch64\|ARM" && echo "✓ Correct ARM64 binary" || (echo "✗ Wrong architecture" && exit 1)
+
+      - name: Test CLI execution via wrapper
+        run: |
+          echo "Testing CLI version command..."
+          node ./dist/aptos.js --version
+
+      - name: Test CLI info command
+        run: |
+          echo "Testing CLI info command..."
+          node ./dist/aptos.js info

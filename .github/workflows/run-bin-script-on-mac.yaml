@@ -15,9 +15,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-14
+          - runner: macos-latest
             arch: ARM64
-          - runner: macos-13
+          - runner: macos-15-intel
             arch: x86_64
     steps:
       - name: Checkout repository
@@ -88,10 +88,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-14
+          - runner: macos-latest
             arch: ARM64
             brew_path: /opt/homebrew/bin/brew
-          - runner: macos-13
+          - runner: macos-15-intel
             arch: x86_64
             brew_path: /usr/local/bin/brew
     steps:
