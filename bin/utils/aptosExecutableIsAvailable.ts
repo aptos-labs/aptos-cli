@@ -1,12 +1,14 @@
 import { execSyncShell } from "./execSyncShell.js";
 
 /**
- * Only works on Unix systems. This is fine because we only need to check for brew on
- * MacOS.
+ * Check if an executable is available on the system.
+ * Uses `which` on Unix systems (macOS/Linux) and `where` on Windows.
  */
-export const executableIsAvailable = (name) => {
+export const executableIsAvailable = (name: string): boolean => {
   try {
-    execSyncShell(`which ${name}`, { encoding: "utf8" });
+    const command =
+      process.platform === "win32" ? `where ${name}` : `which ${name}`;
+    execSyncShell(command, { encoding: "utf8", stdio: "pipe" });
     return true;
   } catch (error) {
     return false;
