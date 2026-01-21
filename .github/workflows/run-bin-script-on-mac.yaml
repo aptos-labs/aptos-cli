@@ -49,6 +49,8 @@ jobs:
           brew --version
 
       - name: Test CLI installation (via Homebrew)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Testing CLI installation..."
           node ./dist/aptos.js --install
@@ -122,9 +124,11 @@ jobs:
           fi
 
       - name: Test CLI installation (direct download)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Testing CLI installation via direct download..."
-          node ./dist/aptos.js --install
+          node ./dist/aptos.js --install --direct-download
 
       - name: Verify CLI was installed to ~/.local/bin
         run: |

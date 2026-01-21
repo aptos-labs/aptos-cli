@@ -1,13 +1,20 @@
 #!/usr/bin/env node
 
-// On MacOS we install the CLI with brew. There are two main reasons for this:
-// 1. Brew builds the CLI for the native CPU architecture for the user, which
-//    eliminates any issues arising from using x86 binaries on ARM machines.
-// 2. Brew handles dependency management for us. This isn't relevant right now but
-//    might become necessary later if we reintroduce OpenSSL as a dep for the CLI.
+// Installation priorities by platform:
 //
-// On Linux and Windows we just query the GH API for the latest CLI release and
-// download and extract that.
+// macOS:
+//   1. Homebrew (if available) - builds for native CPU architecture
+//   2. Direct download from GitHub releases
+//
+// Windows:
+//   1. winget (if available)
+//   2. Chocolatey (if available)
+//   3. Direct download from GitHub releases
+//
+// Linux:
+//   - Direct download from GitHub releases (with Ubuntu version detection)
+//
+// Use --direct-download or set APTOS_DIRECT_DOWNLOAD=1 to skip package managers.
 
 import { program } from "commander";
 
@@ -20,6 +27,10 @@ program
   .option("-i, --install", "install the latest version of the CLI")
   .option("-u, --update", "update the CLI to the latest version")
   .option("-b, --binary-path <path>", "path to an existing Aptos CLI binary")
+  .option(
+    "-d, --direct-download",
+    "skip package managers and download directly from GitHub"
+  )
   .allowUnknownOption();
 
 program.parse(process.argv);
@@ -29,6 +40,10 @@ const main = async () => {
     install: program.opts().install,
     update: program.opts().update,
     binaryPath: program.opts().binaryPath,
+    directDownload:
+      program.opts().directDownload ||
+      process.env.APTOS_DIRECT_DOWNLOAD === "1" ||
+      process.env.APTOS_DIRECT_DOWNLOAD === "true",
   };
   const unknownOptions = program.args;
 

@@ -6,8 +6,29 @@ interface GitHubRelease {
 }
 
 /**
+ * Build headers for GitHub API requests.
+ * Uses GITHUB_TOKEN environment variable if available for authenticated requests.
+ */
+const getGitHubHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = {
+    Accept: "application/vnd.github.v3+json",
+    "User-Agent": "aptos-cli-npm",
+  };
+
+  // Use GITHUB_TOKEN if available for higher rate limits
+  const token = process.env.GITHUB_TOKEN;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return headers;
+};
+
+/**
  * Query the GitHub API to find the latest CLI release. We assume that the CLI is in
  * the last 100 releases so we don't paginate through the releases.
+ *
+ * Set GITHUB_TOKEN environment variable for higher rate limits.
  */
 export const getLatestVersionGh = async (): Promise<string> => {
   const prefix = `${PNAME}-v`;
@@ -16,7 +37,7 @@ export const getLatestVersionGh = async (): Promise<string> => {
 
   let response: Response;
   try {
-    response = await fetch(url);
+    response = await fetch(url, { headers: getGitHubHeaders() });
   } catch (error) {
     throw new Error(
       `Failed to fetch releases from GitHub: ${error instanceof Error ? error.message : String(error)}`
@@ -24,7 +45,7 @@ export const getLatestVersionGh = async (): Promise<string> => {
   }
 
   if (!response.ok) {
-    if (response.status === 403) {
+    if (response.status === 403 || response.status === 429) {
       throw new Error(
         "GitHub API rate limit exceeded. Please try again later or set a GITHUB_TOKEN environment variable."
       );
@@ -37,7 +58,7 @@ export const getLatestVersionGh = async (): Promise<string> => {
   let releases: GitHubRelease[];
   try {
     releases = await response.json();
-  } catch (error) {
+  } catch {
     throw new Error("Failed to parse GitHub API response as JSON");
   }
 

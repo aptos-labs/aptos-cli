@@ -5,15 +5,27 @@ import { getLatestVersionGh } from "../utils/ghOperations.js";
 import { execSyncShell } from "../utils/execSyncShell.js";
 import { installCli } from "./install.js";
 import { isInstalledViaBrew, updateViaBrew } from "../utils/brewOperations.js";
+import {
+  isInstalledViaWinget,
+  isInstalledViaChoco,
+  updateViaWinget,
+  updateViaChoco,
+} from "../utils/windowsPackageManagers.js";
 
 /**
  * Update the Aptos CLI to the latest version.
  *
- * If installed via Homebrew, uses `brew upgrade aptos`.
- * Otherwise, compares the currently installed version with the latest release
- * on GitHub and reinstalls if a newer version is available.
+ * Update methods by installation type:
+ * - Homebrew: `brew upgrade aptos`
+ * - winget: `winget upgrade`
+ * - Chocolatey: `choco upgrade`
+ * - Direct download: Compare versions and reinstall if newer
+ *
+ * @param directDownload - If true, skip package manager updates and force direct download
  */
-export const updateCli = async (): Promise<void> => {
+export const updateCli = async (
+  directDownload: boolean = false
+): Promise<void> => {
   const binaryPath = getLocalBinPath();
 
   if (!existsSync(binaryPath)) {
@@ -23,10 +35,25 @@ export const updateCli = async (): Promise<void> => {
     return;
   }
 
-  // If installed via Homebrew, use brew upgrade
-  if (isInstalledViaBrew()) {
-    updateViaBrew();
-    return;
+  // Check for package manager installations (unless directDownload is set)
+  if (!directDownload) {
+    // If installed via Homebrew, use brew upgrade
+    if (isInstalledViaBrew()) {
+      updateViaBrew();
+      return;
+    }
+
+    // If installed via winget, use winget upgrade
+    if (isInstalledViaWinget()) {
+      updateViaWinget();
+      return;
+    }
+
+    // If installed via Chocolatey, use choco upgrade
+    if (isInstalledViaChoco()) {
+      updateViaChoco();
+      return;
+    }
   }
 
   const latestVersion = await getLatestVersionGh();
@@ -63,5 +90,5 @@ export const updateCli = async (): Promise<void> => {
     console.error(`Warning: Could not remove old binary at ${binaryPath}`);
   }
 
-  await installCli();
+  await installCli(directDownload);
 };

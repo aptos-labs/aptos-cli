@@ -47,6 +47,8 @@ jobs:
           echo "${{ matrix.version }}"
 
       - name: Test CLI installation
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Testing CLI installation..."
           node ./dist/aptos.js --install
@@ -101,10 +103,13 @@ jobs:
           platforms: arm64
 
       - name: Run ARM64 tests in Docker
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker run --rm --platform linux/arm64 \
             -v "$PWD":/workspace \
             -w /workspace \
+            -e GITHUB_TOKEN="$GITHUB_TOKEN" \
             node:20-bookworm \
             bash -c '
               set -e

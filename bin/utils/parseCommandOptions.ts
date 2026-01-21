@@ -8,6 +8,7 @@ interface CommandOptions {
   install: boolean;
   update: boolean;
   binaryPath?: string;
+  directDownload?: boolean;
 }
 
 /**
@@ -21,19 +22,19 @@ export const parseCommandOptions = async (
 ): Promise<void> => {
   // if `--install` flag is set, only install the cli and don't run it
   if (options.install) {
-    await installCli();
+    await installCli(options.directDownload);
     return;
   }
   // if `--update` flag is set, update the cli and don't run it
   if (options.update) {
-    await updateCli();
+    await updateCli(options.directDownload);
     return;
   }
 
   // if no flags are set, install and run the cli
   const path = options.binaryPath || getLocalBinPath();
   if (!options.binaryPath && !existsSync(path)) {
-    await installCli();
+    await installCli(options.directDownload);
   }
   await runCLI(unknownOptions, options.binaryPath);
 };

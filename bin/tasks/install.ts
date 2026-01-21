@@ -12,32 +12,74 @@ import {
   isInstalledViaBrew,
   installViaBrew,
 } from "../utils/brewOperations.js";
+import {
+  isWingetAvailable,
+  isChocoAvailable,
+  isInstalledViaWinget,
+  isInstalledViaChoco,
+  installViaWinget,
+  installViaChoco,
+} from "../utils/windowsPackageManagers.js";
 
 /**
  * Install the Aptos CLI.
  *
  * Installation priority:
- * 1. On macOS with Homebrew available: Use `brew install aptos`
- * 2. Otherwise: Download binary directly from GitHub releases
  *
- * This follows the same logic as the official install scripts:
- * - https://aptos.dev/scripts/install_cli.sh
- * - https://aptos.dev/scripts/install_cli.ps1
+ * macOS:
+ *   1. Homebrew (if available)
+ *   2. Direct download from GitHub releases
+ *
+ * Windows:
+ *   1. winget (if available)
+ *   2. Chocolatey (if available)
+ *   3. Direct download from GitHub releases
+ *
+ * Linux:
+ *   - Direct download from GitHub releases
+ *
+ * @param directDownload - If true, skip package managers and download directly
  */
-export const installCli = async (): Promise<void> => {
+export const installCli = async (
+  directDownload: boolean = false
+): Promise<void> => {
   const os = getOS();
 
-  // On macOS, prefer Homebrew if available
-  if (os === "MacOS" && isBrewAvailable()) {
-    if (isInstalledViaBrew()) {
-      console.log("Aptos CLI is already installed via Homebrew");
+  // Skip package managers if directDownload is set
+  if (!directDownload) {
+    // On macOS, prefer Homebrew if available
+    if (os === "MacOS" && isBrewAvailable()) {
+      if (isInstalledViaBrew()) {
+        console.log("Aptos CLI is already installed via Homebrew");
+        return;
+      }
+      installViaBrew();
       return;
     }
-    installViaBrew();
-    return;
+
+    // On Windows, prefer winget, then Chocolatey
+    if (os === "Windows") {
+      if (isWingetAvailable()) {
+        if (isInstalledViaWinget()) {
+          console.log("Aptos CLI is already installed via winget");
+          return;
+        }
+        installViaWinget();
+        return;
+      }
+
+      if (isChocoAvailable()) {
+        if (isInstalledViaChoco()) {
+          console.log("Aptos CLI is already installed via Chocolatey");
+          return;
+        }
+        installViaChoco();
+        return;
+      }
+    }
   }
 
-  // For non-Homebrew installation, check if binary already exists
+  // Direct download installation
   const binaryPath = getLocalBinPath();
   if (existsSync(binaryPath)) {
     console.log("Aptos CLI is already installed");

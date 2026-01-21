@@ -36,11 +36,13 @@ jobs:
           Write-Host "Architecture:"
           $env:PROCESSOR_ARCHITECTURE
 
-      - name: Test CLI installation
+      - name: Test CLI installation (direct download)
         shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          Write-Host "Testing CLI installation..."
-          node ./dist/aptos.js --install
+          Write-Host "Testing CLI installation via direct download..."
+          node ./dist/aptos.js --install --direct-download
 
       - name: Verify CLI was installed
         shell: pwsh
@@ -75,9 +77,11 @@ jobs:
 
       - name: Test CLI update
         shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           Write-Host "Testing CLI update..."
-          node ./dist/aptos.js --update
+          node ./dist/aptos.js --update --direct-download
 
   test-windows-cmd:
     name: Windows CMD Shell
@@ -103,9 +107,11 @@ jobs:
 
       - name: Test CLI installation
         shell: cmd
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo Testing CLI installation...
-          node ./dist/aptos.js --install
+          node ./dist/aptos.js --install --direct-download
 
       - name: Test CLI execution
         shell: cmd

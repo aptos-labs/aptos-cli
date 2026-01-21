@@ -2,6 +2,12 @@ import { join } from "path";
 import { homedir } from "os";
 import { getOS } from "./getUserOs.js";
 import { isInstalledViaBrew, getCliPathBrew } from "./brewOperations.js";
+import {
+  isInstalledViaWinget,
+  isInstalledViaChoco,
+  getCliPathWinget,
+  getCliPathChoco,
+} from "./windowsPackageManagers.js";
 
 /**
  * Get the binary directory path where the CLI should be installed.
@@ -24,7 +30,10 @@ export const getBinDir = (): string => {
 /**
  * Get the full path to the Aptos CLI binary.
  *
- * On macOS, checks for Homebrew installation first and uses that path if available.
+ * Checks for package manager installations first:
+ * - macOS: Homebrew
+ * - Windows: winget, then Chocolatey
+ *
  * Otherwise uses the standard paths:
  * - macOS/Linux: ~/.local/bin/aptos
  * - Windows: $USERPROFILE\.aptoscli\bin\aptos.exe
@@ -39,6 +48,23 @@ export const getLocalBinPath = (): string => {
         return getCliPathBrew();
       } catch {
         // Fall through to default path
+      }
+    }
+  }
+
+  // On Windows, check for winget or Chocolatey installations
+  if (os === "Windows") {
+    if (isInstalledViaWinget()) {
+      const wingetPath = getCliPathWinget();
+      if (wingetPath) {
+        return wingetPath;
+      }
+    }
+
+    if (isInstalledViaChoco()) {
+      const chocoPath = getCliPathChoco();
+      if (chocoPath) {
+        return chocoPath;
       }
     }
   }
