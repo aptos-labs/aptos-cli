@@ -7,10 +7,18 @@ on:
       - main
 
 jobs:
-  test-with-homebrew:
-    name: macOS (Homebrew)
-    runs-on: macos-latest
-    concurrency: ci-${{ github.ref }}-macos-homebrew
+  test-homebrew:
+    name: macOS ${{ matrix.arch }} (Homebrew)
+    runs-on: ${{ matrix.runner }}
+    concurrency: ci-${{ github.ref }}-macos-homebrew-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14
+            arch: ARM64
+          - runner: macos-13
+            arch: x86_64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,6 +34,14 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Display system info
+        run: |
+          echo "Runner: ${{ matrix.runner }}"
+          echo "Expected arch: ${{ matrix.arch }}"
+          echo "Actual arch: $(uname -m)"
+          echo "OS: $(uname -s)"
+          sw_vers
 
       - name: Verify Homebrew is available
         run: |
@@ -60,9 +76,19 @@ jobs:
           node ./dist/aptos.js info
 
   test-direct-download:
-    name: macOS (Direct Download)
-    runs-on: macos-latest
-    concurrency: ci-${{ github.ref }}-macos-direct
+    name: macOS ${{ matrix.arch }} (Direct Download)
+    runs-on: ${{ matrix.runner }}
+    concurrency: ci-${{ github.ref }}-macos-direct-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14
+            arch: ARM64
+            brew_path: /opt/homebrew/bin/brew
+          - runner: macos-13
+            arch: x86_64
+            brew_path: /usr/local/bin/brew
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -79,11 +105,21 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Display system info
+        run: |
+          echo "Runner: ${{ matrix.runner }}"
+          echo "Expected arch: ${{ matrix.arch }}"
+          echo "Actual arch: $(uname -m)"
+
       - name: Remove Homebrew from PATH (simulate no Homebrew)
         run: |
           echo "Simulating environment without Homebrew..."
-          # Rename brew temporarily to simulate it not being available
-          sudo mv /opt/homebrew/bin/brew /opt/homebrew/bin/brew.bak || sudo mv /usr/local/bin/brew /usr/local/bin/brew.bak || true
+          if [ -f "${{ matrix.brew_path }}" ]; then
+            sudo mv "${{ matrix.brew_path }}" "${{ matrix.brew_path }}.bak"
+            echo "Homebrew hidden"
+          else
+            echo "Homebrew not found at ${{ matrix.brew_path }}"
+          fi
 
       - name: Test CLI installation (direct download)
         run: |
@@ -96,6 +132,20 @@ jobs:
           ls -la ~/.local/bin/aptos
           echo "CLI version:"
           ~/.local/bin/aptos --version
+          echo ""
+          echo "File type:"
+          file ~/.local/bin/aptos
+
+      - name: Verify correct architecture binary
+        run: |
+          echo "Verifying binary architecture..."
+          ARCH=$(file ~/.local/bin/aptos)
+          echo "$ARCH"
+          if [[ "${{ matrix.arch }}" == "ARM64" ]]; then
+            echo "$ARCH" | grep -q "arm64" && echo "✓ Correct ARM64 binary" || (echo "✗ Wrong architecture" && exit 1)
+          else
+            echo "$ARCH" | grep -q "x86_64" && echo "✓ Correct x86_64 binary" || (echo "✗ Wrong architecture" && exit 1)
+          fi
 
       - name: Test CLI execution
         run: |
@@ -105,4 +155,7 @@ jobs:
       - name: Restore Homebrew
         if: always()
         run: |
-          sudo mv /opt/homebrew/bin/brew.bak /opt/homebrew/bin/brew || sudo mv /usr/local/bin/brew.bak /usr/local/bin/brew || true
+          if [ -f "${{ matrix.brew_path }}.bak" ]; then
+            sudo mv "${{ matrix.brew_path }}.bak" "${{ matrix.brew_path }}"
+            echo "Homebrew restored"
+          fi
