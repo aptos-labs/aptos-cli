@@ -4,7 +4,6 @@ import { getLocalBinPath } from "../utils/getLocalBinPath.js";
 import {
   getCliVersion,
   hasUserSpecifiedVersion,
-  getUserSpecifiedVersion,
 } from "../utils/ghOperations.js";
 import { getTargetPlatform } from "../utils/getUserOs.js";
 import { execSyncShell } from "../utils/execSyncShell.js";
