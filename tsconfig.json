@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "moduleResolution": "node",
-    "noImplicitAny": false,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": true,
@@ -11,7 +15,9 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "target": "ES2022",
-    "module": "ES2020"
+    "module": "ES2020",
+    "skipLibCheck": true,
+    "esModuleInterop": true
   },
   "include": ["./bin"],
   "exclude": ["node_modules"]

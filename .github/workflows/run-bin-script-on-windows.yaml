@@ -1,4 +1,4 @@
-name: Run bin script on Windows
+name: Test CLI on Windows
 
 on:
   pull_request:
@@ -7,16 +7,123 @@ on:
       - main
 
 jobs:
-  build:
+  test-windows:
+    name: Windows (x86_64)
     runs-on: windows-latest
-    concurrency: ci-${{ github.ref }}-${{ github.workflow }}
+    concurrency: ci-${{ github.ref }}-windows
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run the bin script on Windows
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+      - name: Display system info
+        shell: pwsh
+        run: |
+          Write-Host "Windows Version:"
+          [System.Environment]::OSVersion
+          Write-Host ""
+          Write-Host "Architecture:"
+          $env:PROCESSOR_ARCHITECTURE
+
+      - name: Test CLI installation (direct download)
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          Write-Host "Testing CLI installation via direct download..."
+          node ./dist/aptos.js --install --direct-download
+
+      - name: Verify CLI was installed
+        shell: pwsh
+        run: |
+          Write-Host "Checking installation path..."
+          $cliPath = "$env:USERPROFILE\.aptoscli\bin\aptos.exe"
+          if (Test-Path $cliPath) {
+            Write-Host "CLI found at: $cliPath"
+            & $cliPath --version
+          } else {
+            Write-Host "CLI not found at expected path: $cliPath"
+            exit 1
+          }
+
+      - name: Test CLI execution via wrapper
+        shell: pwsh
+        run: |
+          Write-Host "Testing CLI version command..."
+          node ./dist/aptos.js --version
+
+      - name: Test CLI help
+        shell: pwsh
+        run: |
+          Write-Host "Testing CLI help command..."
+          node ./dist/aptos.js --help
+
+      - name: Test CLI info command
+        shell: pwsh
+        run: |
+          Write-Host "Testing CLI info command..."
+          node ./dist/aptos.js info
+
+      - name: Test CLI update
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          Write-Host "Testing CLI update..."
+          node ./dist/aptos.js --update --direct-download
+
+  test-windows-cmd:
+    name: Windows CMD Shell
+    runs-on: windows-latest
+    concurrency: ci-${{ github.ref }}-windows-cmd
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        shell: cmd
+        run: npm ci
+
+      - name: Build
+        shell: cmd
+        run: npm run build
+
+      - name: Test CLI installation
+        shell: cmd
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo Testing CLI installation...
+          node ./dist/aptos.js --install --direct-download
+
+      - name: Test CLI execution
         shell: cmd
         run: |
-          npm install
-          npm run build
-          node ./dist/aptos.js
+          echo Testing CLI version command...
+          node ./dist/aptos.js --version
+
+      - name: Test CLI info command
+        shell: cmd
+        run: |
+          echo Testing CLI info command...
+          node ./dist/aptos.js info

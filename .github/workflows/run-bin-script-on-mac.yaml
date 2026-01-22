@@ -1,4 +1,4 @@
-name: Run bin script on Mac
+name: Test CLI on macOS
 
 on:
   pull_request:
@@ -7,15 +7,162 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: macos-latest
-    concurrency: ci-${{ github.ref }}-${{ github.workflow }}
+  test-homebrew:
+    name: macOS ${{ matrix.arch }} (Homebrew)
+    runs-on: ${{ matrix.runner }}
+    concurrency: ci-${{ github.ref }}-macos-homebrew-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            arch: ARM64
+          - runner: macos-15-intel
+            arch: x86_64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run the bin script on Mac
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+      - name: Display system info
         run: |
-          npm install
-          npm run build
-          node ./dist/aptos.js
+          echo "Runner: ${{ matrix.runner }}"
+          echo "Expected arch: ${{ matrix.arch }}"
+          echo "Actual arch: $(uname -m)"
+          echo "OS: $(uname -s)"
+          sw_vers
+
+      - name: Verify Homebrew is available
+        run: |
+          echo "Homebrew version:"
+          brew --version
+
+      - name: Test CLI installation (via Homebrew)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Testing CLI installation..."
+          node ./dist/aptos.js --install
+
+      - name: Verify CLI was installed via Homebrew
+        run: |
+          echo "Checking Homebrew installation..."
+          brew list aptos
+          echo "CLI location:"
+          which aptos || brew --prefix aptos
+
+      - name: Test CLI execution
+        run: |
+          echo "Testing CLI version command..."
+          node ./dist/aptos.js --version
+
+      - name: Test CLI help
+        run: |
+          echo "Testing CLI help command..."
+          node ./dist/aptos.js --help
+
+      - name: Test CLI info command
+        run: |
+          echo "Testing CLI info command..."
+          node ./dist/aptos.js info
+
+  test-direct-download:
+    name: macOS ${{ matrix.arch }} (Direct Download)
+    runs-on: ${{ matrix.runner }}
+    concurrency: ci-${{ github.ref }}-macos-direct-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            arch: ARM64
+            brew_path: /opt/homebrew/bin/brew
+          - runner: macos-15-intel
+            arch: x86_64
+            brew_path: /usr/local/bin/brew
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Display system info
+        run: |
+          echo "Runner: ${{ matrix.runner }}"
+          echo "Expected arch: ${{ matrix.arch }}"
+          echo "Actual arch: $(uname -m)"
+
+      - name: Remove Homebrew from PATH (simulate no Homebrew)
+        run: |
+          echo "Simulating environment without Homebrew..."
+          if [ -f "${{ matrix.brew_path }}" ]; then
+            sudo mv "${{ matrix.brew_path }}" "${{ matrix.brew_path }}.bak"
+            echo "Homebrew hidden"
+          else
+            echo "Homebrew not found at ${{ matrix.brew_path }}"
+          fi
+
+      - name: Test CLI installation (direct download)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Testing CLI installation via direct download..."
+          node ./dist/aptos.js --install --direct-download
+
+      - name: Verify CLI was installed to ~/.local/bin
+        run: |
+          echo "Checking installation path..."
+          ls -la ~/.local/bin/aptos
+          echo "CLI version:"
+          ~/.local/bin/aptos --version
+          echo ""
+          echo "File type:"
+          file ~/.local/bin/aptos
+
+      - name: Verify correct architecture binary
+        run: |
+          echo "Verifying binary architecture..."
+          ARCH=$(file ~/.local/bin/aptos)
+          echo "$ARCH"
+          if [[ "${{ matrix.arch }}" == "ARM64" ]]; then
+            echo "$ARCH" | grep -q "arm64" && echo "✓ Correct ARM64 binary" || (echo "✗ Wrong architecture" && exit 1)
+          else
+            echo "$ARCH" | grep -q "x86_64" && echo "✓ Correct x86_64 binary" || (echo "✗ Wrong architecture" && exit 1)
+          fi
+
+      - name: Test CLI execution
+        run: |
+          echo "Testing CLI via wrapper..."
+          node ./dist/aptos.js --version
+
+      - name: Restore Homebrew
+        if: always()
+        run: |
+          if [ -f "${{ matrix.brew_path }}.bak" ]; then
+            sudo mv "${{ matrix.brew_path }}.bak" "${{ matrix.brew_path }}"
+            echo "Homebrew restored"
+          fi
