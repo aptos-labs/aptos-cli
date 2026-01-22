@@ -40,24 +40,13 @@ jobs:
       - name: Verify CLI installation
         run: |
           echo "CLI version:"
-          node ./dist/aptos.js --version
+          ~/.local/bin/aptos --version
 
       # Build the Move project
       - name: Build Move package
         working-directory: examples/hello_blockchain
         run: |
           echo "Building Move package..."
-          ../../node_modules/.bin/../../../dist/aptos.js move compile \
-            --named-addresses hello_blockchain=${{ github.event.inputs.named_address || '0x1' }} \
-            --save-metadata
-        env:
-          PATH: ${{ env.PATH }}:~/.local/bin
-
-      # Alternative: Use the installed CLI directly
-      - name: Build Move package (direct CLI)
-        working-directory: examples/hello_blockchain
-        run: |
-          echo "Building Move package with direct CLI..."
           ~/.local/bin/aptos move compile \
             --named-addresses hello_blockchain=${{ github.event.inputs.named_address || '0x1' }} \
             --save-metadata
