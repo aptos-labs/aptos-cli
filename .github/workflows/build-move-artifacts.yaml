@@ -1,0 +1,210 @@
+name: Build Move Artifacts
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      named_address:
+        description: 'Named address for the module (e.g., 0x1234...)'
+        required: false
+        default: '0x1'
+
+jobs:
+  build-artifacts:
+    name: Build Move Artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build wrapper
+        run: npm run build
+
+      - name: Install Aptos CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node ./dist/aptos.js --install
+
+      - name: Verify CLI installation
+        run: |
+          echo "CLI version:"
+          node ./dist/aptos.js --version
+
+      # Build the Move project
+      - name: Build Move package
+        working-directory: examples/hello_blockchain
+        run: |
+          echo "Building Move package..."
+          ../../node_modules/.bin/../../../dist/aptos.js move compile \
+            --named-addresses hello_blockchain=${{ github.event.inputs.named_address || '0x1' }} \
+            --save-metadata
+        env:
+          PATH: ${{ env.PATH }}:~/.local/bin
+
+      # Alternative: Use the installed CLI directly
+      - name: Build Move package (direct CLI)
+        working-directory: examples/hello_blockchain
+        run: |
+          echo "Building Move package with direct CLI..."
+          ~/.local/bin/aptos move compile \
+            --named-addresses hello_blockchain=${{ github.event.inputs.named_address || '0x1' }} \
+            --save-metadata
+
+      # Generate publish payload for multisig deployment
+      - name: Generate publish payload
+        working-directory: examples/hello_blockchain
+        run: |
+          echo "Generating publish payload..."
+          ~/.local/bin/aptos move build-publish-payload \
+            --named-addresses hello_blockchain=${{ github.event.inputs.named_address || '0x1' }} \
+            --json-output-file publish-payload.json \
+            --assume-yes
+          echo "Publish payload generated:"
+          ls -la publish-payload.json
+          echo "Payload content preview:"
+          head -c 500 publish-payload.json
+          echo ""
+
+      # List generated artifacts
+      - name: List build artifacts
+        working-directory: examples/hello_blockchain
+        run: |
+          echo "=== Build artifacts ==="
+          find build -type f -name "*.mv" -o -name "*.json" 2>/dev/null || echo "No build directory"
+          echo ""
+          echo "=== Payload files ==="
+          ls -la *.json 2>/dev/null || echo "No JSON payload files"
+
+      # Upload artifacts for use in other jobs
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: move-build-artifacts
+          path: |
+            examples/hello_blockchain/build/
+            examples/hello_blockchain/*.json
+          retention-days: 5
+
+  # Example job that uses the artifacts from the build step
+  use-artifacts:
+    name: Use Build Artifacts
+    runs-on: ubuntu-latest
+    needs: build-artifacts
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: move-build-artifacts
+          path: artifacts/
+
+      - name: Display downloaded artifacts
+        run: |
+          echo "=== Downloaded artifacts ==="
+          find artifacts -type f -ls
+          echo ""
+          echo "=== Publish payload content ==="
+          if [ -f "artifacts/publish-payload.json" ]; then
+            cat artifacts/publish-payload.json
+          else
+            echo "Publish payload not found"
+            find artifacts -name "*.json" -exec echo "Found: {}" \; -exec cat {} \;
+          fi
+
+      - name: Validate payload structure
+        run: |
+          PAYLOAD_FILE=$(find artifacts -name "publish-payload.json" | head -1)
+          if [ -n "$PAYLOAD_FILE" ]; then
+            echo "Validating payload structure..."
+            # Check that the JSON is valid
+            python3 -c "import json; json.load(open('$PAYLOAD_FILE')); print('Valid JSON')"
+            # Check for expected fields
+            python3 -c "
+          import json
+          with open('$PAYLOAD_FILE') as f:
+              payload = json.load(f)
+              print('Payload type:', payload.get('type', 'N/A'))
+              print('Function:', payload.get('function', 'N/A'))
+              if 'args' in payload:
+                  print('Number of args:', len(payload['args']))
+          "
+          else
+            echo "No payload file found"
+            exit 1
+          fi
+
+  # Example: Build upgrade payload (for object code deployment)
+  build-upgrade-payload:
+    name: Build Upgrade Payload Example
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build wrapper
+        run: npm run build
+
+      - name: Install Aptos CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node ./dist/aptos.js --install
+
+      - name: Check available move commands
+        run: |
+          echo "Available move commands:"
+          ~/.local/bin/aptos move --help
+
+      # Note: build-upgrade-payload is for upgrading existing deployed object code
+      # It requires an existing object address. This example shows the command structure.
+      - name: Show upgrade payload command help
+        run: |
+          echo "=== build-upgrade-payload command help ==="
+          ~/.local/bin/aptos move build-upgrade-payload --help || echo "Command may not be available in this CLI version"
+
+      # Build the package first (required for any payload generation)
+      - name: Build Move package for upgrade
+        working-directory: examples/hello_blockchain
+        run: |
+          echo "Building Move package..."
+          ~/.local/bin/aptos move compile \
+            --named-addresses hello_blockchain=0x1 \
+            --save-metadata
+
+      # Example upgrade payload generation (would need real object address in production)
+      - name: Generate upgrade payload (example)
+        working-directory: examples/hello_blockchain
+        continue-on-error: true
+        run: |
+          echo "Attempting to generate upgrade payload..."
+          echo "Note: This requires an existing object address in production use"
+          # The command structure for upgrade payload:
+          # aptos move build-upgrade-payload \
+          #   --named-addresses hello_blockchain=0x1 \
+          #   --object-address 0xc0de... \
+          #   --json-output-file upgrade-payload.json \
+          #   --assume-yes
+          ~/.local/bin/aptos move build-upgrade-payload \
+            --named-addresses hello_blockchain=0x1 \
+            --object-address 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef \
+            --json-output-file upgrade-payload.json \
+            --assume-yes 2>&1 || echo "Expected: This would work with a real deployed object address"
