@@ -1,7 +1,12 @@
 import { existsSync, unlinkSync } from "fs";
 
 import { getLocalBinPath } from "../utils/getLocalBinPath.js";
-import { getLatestVersionGh } from "../utils/ghOperations.js";
+import {
+  getCliVersion,
+  hasUserSpecifiedVersion,
+  getUserSpecifiedVersion,
+} from "../utils/ghOperations.js";
+import { getTargetPlatform } from "../utils/getUserOs.js";
 import { execSyncShell } from "../utils/execSyncShell.js";
 import { installCli } from "./install.js";
 import { isInstalledViaBrew, updateViaBrew } from "../utils/brewOperations.js";
@@ -13,13 +18,16 @@ import {
 } from "../utils/windowsPackageManagers.js";
 
 /**
- * Update the Aptos CLI to the latest version.
+ * Update the Aptos CLI to the latest version (or a specific version if APTOS_CLI_VERSION is set).
  *
  * Update methods by installation type:
  * - Homebrew: `brew upgrade aptos`
  * - winget: `winget upgrade`
  * - Chocolatey: `choco upgrade`
- * - Direct download: Compare versions and reinstall if newer
+ * - Direct download: Compare versions and reinstall if newer/different
+ *
+ * Note: When APTOS_CLI_VERSION is set, package managers are skipped and the
+ * specified version is downloaded directly from GitHub releases.
  *
  * @param directDownload - If true, skip package manager updates and force direct download
  */
@@ -35,8 +43,17 @@ export const updateCli = async (
     return;
   }
 
-  // Check for package manager installations (unless directDownload is set)
-  if (!directDownload) {
+  // If a specific version is requested, force direct download
+  const useDirectDownload = directDownload || hasUserSpecifiedVersion();
+
+  if (useDirectDownload && hasUserSpecifiedVersion()) {
+    console.log(
+      `Using specified version from APTOS_CLI_VERSION: ${process.env.APTOS_CLI_VERSION}`
+    );
+  }
+
+  // Check for package manager installations (unless directDownload is set or specific version requested)
+  if (!useDirectDownload) {
     // If installed via Homebrew, use brew upgrade
     if (isInstalledViaBrew()) {
       updateViaBrew();
@@ -56,7 +73,11 @@ export const updateCli = async (
     }
   }
 
-  const latestVersion = await getLatestVersionGh();
+  // Get target platform for version validation
+  const targetPlatform = getTargetPlatform();
+
+  // Get the target version (user-specified or latest)
+  const targetVersion = await getCliVersion(targetPlatform);
 
   // Get the current version of the CLI
   let currentVersion: string;
@@ -73,15 +94,23 @@ export const updateCli = async (
     currentVersion = "";
   }
 
-  // Check if the installed version is the latest version
-  if (currentVersion === latestVersion) {
-    console.log(`CLI is up to date (version ${currentVersion})`);
+  // Check if the installed version matches the target version
+  if (currentVersion === targetVersion) {
+    if (hasUserSpecifiedVersion()) {
+      console.log(
+        `CLI is already at the specified version (${currentVersion})`
+      );
+    } else {
+      console.log(`CLI is up to date (version ${currentVersion})`);
+    }
     return;
   }
 
-  console.log(
-    `Updating CLI from version ${currentVersion || "unknown"} to ${latestVersion}...`
-  );
+  const updateDescription = hasUserSpecifiedVersion()
+    ? `Switching CLI from version ${currentVersion || "unknown"} to ${targetVersion}...`
+    : `Updating CLI from version ${currentVersion || "unknown"} to ${targetVersion}...`;
+
+  console.log(updateDescription);
 
   // Remove the old binary before installing the new one
   try {
@@ -90,5 +119,5 @@ export const updateCli = async (
     console.error(`Warning: Could not remove old binary at ${binaryPath}`);
   }
 
-  await installCli(directDownload);
+  await installCli(useDirectDownload);
 };

@@ -4,12 +4,19 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-import { getLatestVersionGh } from "./ghOperations.js";
+import {
+  getLatestVersionGh,
+  getUserSpecifiedVersion,
+  hasUserSpecifiedVersion,
+  validateVersionExists,
+  getCliVersion,
+} from "./ghOperations.js";
 
 describe("ghOperations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     delete process.env.GITHUB_TOKEN;
+    delete process.env.APTOS_CLI_VERSION;
   });
 
   afterEach(() => {
@@ -155,6 +162,146 @@ describe("ghOperations", () => {
       await expect(getLatestVersionGh()).rejects.toThrow(
         "Unexpected response format"
       );
+    });
+  });
+
+  describe("getUserSpecifiedVersion", () => {
+    it("should return undefined when APTOS_CLI_VERSION is not set", () => {
+      delete process.env.APTOS_CLI_VERSION;
+      expect(getUserSpecifiedVersion()).toBeUndefined();
+    });
+
+    it("should return the version when APTOS_CLI_VERSION is set", () => {
+      process.env.APTOS_CLI_VERSION = "1.2.3";
+      expect(getUserSpecifiedVersion()).toBe("1.2.3");
+    });
+
+    it("should strip v prefix from version", () => {
+      process.env.APTOS_CLI_VERSION = "v1.2.3";
+      expect(getUserSpecifiedVersion()).toBe("1.2.3");
+    });
+
+    it("should handle version without v prefix", () => {
+      process.env.APTOS_CLI_VERSION = "2.0.0";
+      expect(getUserSpecifiedVersion()).toBe("2.0.0");
+    });
+  });
+
+  describe("hasUserSpecifiedVersion", () => {
+    it("should return false when APTOS_CLI_VERSION is not set", () => {
+      delete process.env.APTOS_CLI_VERSION;
+      expect(hasUserSpecifiedVersion()).toBe(false);
+    });
+
+    it("should return true when APTOS_CLI_VERSION is set", () => {
+      process.env.APTOS_CLI_VERSION = "1.0.0";
+      expect(hasUserSpecifiedVersion()).toBe(true);
+    });
+
+    it("should return false when APTOS_CLI_VERSION is empty string", () => {
+      process.env.APTOS_CLI_VERSION = "";
+      expect(hasUserSpecifiedVersion()).toBe(false);
+    });
+  });
+
+  describe("validateVersionExists", () => {
+    it("should return true when version exists", async () => {
+      mockFetch.mockResolvedValue({ ok: true });
+
+      const result = await validateVersionExists("1.0.0", "Linux-x86_64");
+
+      expect(result).toBe(true);
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v1.0.0/aptos-cli-1.0.0-Linux-x86_64.zip",
+        expect.objectContaining({ method: "HEAD" })
+      );
+    });
+
+    it("should return false when version does not exist", async () => {
+      mockFetch.mockResolvedValue({ ok: false });
+
+      const result = await validateVersionExists("99.99.99", "Linux-x86_64");
+
+      expect(result).toBe(false);
+    });
+
+    it("should return false on network error", async () => {
+      mockFetch.mockRejectedValue(new Error("Network error"));
+
+      const result = await validateVersionExists("1.0.0", "Linux-x86_64");
+
+      expect(result).toBe(false);
+    });
+
+    it("should use GITHUB_TOKEN when available", async () => {
+      process.env.GITHUB_TOKEN = "test-token";
+      mockFetch.mockResolvedValue({ ok: true });
+
+      await validateVersionExists("1.0.0", "Linux-x86_64");
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: "Bearer test-token",
+          }),
+        })
+      );
+    });
+  });
+
+  describe("getCliVersion", () => {
+    it("should return latest version when APTOS_CLI_VERSION is not set", async () => {
+      delete process.env.APTOS_CLI_VERSION;
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([{ tag_name: "aptos-cli-v2.0.0" }]),
+      });
+
+      const version = await getCliVersion();
+
+      expect(version).toBe("2.0.0");
+    });
+
+    it("should return user-specified version when APTOS_CLI_VERSION is set", async () => {
+      process.env.APTOS_CLI_VERSION = "1.5.0";
+      // Don't validate when no targetPlatform is provided
+      const version = await getCliVersion();
+
+      expect(version).toBe("1.5.0");
+      // Should not call fetch for releases API
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("should validate version when targetPlatform is provided", async () => {
+      process.env.APTOS_CLI_VERSION = "1.5.0";
+      mockFetch.mockResolvedValue({ ok: true });
+
+      const version = await getCliVersion("Linux-x86_64");
+
+      expect(version).toBe("1.5.0");
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("1.5.0"),
+        expect.objectContaining({ method: "HEAD" })
+      );
+    });
+
+    it("should throw error when specified version does not exist", async () => {
+      process.env.APTOS_CLI_VERSION = "99.99.99";
+      mockFetch.mockResolvedValue({ ok: false });
+
+      await expect(getCliVersion("Linux-x86_64")).rejects.toThrow(
+        "Specified version 99.99.99 does not exist"
+      );
+    });
+
+    it("should strip v prefix and validate version", async () => {
+      process.env.APTOS_CLI_VERSION = "v1.5.0";
+      mockFetch.mockResolvedValue({ ok: true });
+
+      const version = await getCliVersion("Linux-x86_64");
+
+      expect(version).toBe("1.5.0");
     });
   });
 });
