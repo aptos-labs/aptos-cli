@@ -104,6 +104,16 @@ The Aptos CLI can be used in CI/CD pipelines to build Move packages and generate
 
 ```yaml
 # In your GitHub Actions workflow
+
+# Prerequisites: Set up Node.js first
+- name: Setup Node.js
+  uses: actions/setup-node@v4
+  with:
+    node-version: "20"
+
+- name: Install Aptos CLI npm package
+  run: npm install @aptos-labs/aptos-cli
+
 - name: Install Aptos CLI
   run: npx aptos --install
 

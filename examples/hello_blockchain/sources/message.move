@@ -56,4 +56,33 @@ module hello_blockchain::message {
             ENO_MESSAGE
         );
     }
+
+    #[test(account = @0x1)]
+    #[expected_failure(abort_code = 393216, location = Self)]
+    public fun test_get_message_no_message(account: signer) acquires MessageHolder {
+        let addr = signer::address_of(&account);
+        // This should fail because no message has been set
+        get_message(addr);
+    }
+
+    #[test(account = @0x1)]
+    public entry fun test_update_message(account: signer) acquires MessageHolder {
+        let addr = signer::address_of(&account);
+        aptos_framework::account::create_account_for_test(addr);
+        
+        // Set initial message
+        set_message(account, std::string::utf8(b"First message"));
+        assert!(
+            get_message(addr) == std::string::utf8(b"First message"),
+            1
+        );
+
+        // Update message - this should emit MessageChange event
+        let account2 = aptos_framework::account::create_signer_for_test(addr);
+        set_message(account2, std::string::utf8(b"Updated message"));
+        assert!(
+            get_message(addr) == std::string::utf8(b"Updated message"),
+            2
+        );
+    }
 }

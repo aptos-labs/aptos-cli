@@ -71,7 +71,7 @@ jobs:
         working-directory: examples/hello_blockchain
         run: |
           echo "=== Build artifacts ==="
-          find build -type f -name "*.mv" -o -name "*.json" 2>/dev/null || echo "No build directory"
+          find build -type f \( -name "*.mv" -o -name "*.json" \) 2>/dev/null || echo "No build directory"
           echo ""
           echo "=== Payload files ==="
           ls -la *.json 2>/dev/null || echo "No JSON payload files"
@@ -119,15 +119,7 @@ jobs:
             # Check that the JSON is valid
             python3 -c "import json; json.load(open('$PAYLOAD_FILE')); print('Valid JSON')"
             # Check for expected fields
-            python3 -c "
-          import json
-          with open('$PAYLOAD_FILE') as f:
-              payload = json.load(f)
-              print('Payload type:', payload.get('type', 'N/A'))
-              print('Function:', payload.get('function', 'N/A'))
-              if 'args' in payload:
-                  print('Number of args:', len(payload['args']))
-          "
+            python3 -c "import json; f = open('$PAYLOAD_FILE'); payload = json.load(f); print('Payload type:', payload.get('type', 'N/A')); print('Function:', payload.get('function', 'N/A')); args = payload.get('args'); print('Number of args:', len(args) if isinstance(args, list) else 'N/A')"
           else
             echo "No payload file found"
             exit 1
