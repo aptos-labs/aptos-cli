@@ -29,8 +29,15 @@ export const runCLI = async (
   const { os } = getPlatformInfo();
 
   // Spawn a child process to run the real CLI executable with the forwarded arguments
-  spawn(cliPath, args, {
+  const child = spawn(cliPath, args, {
     stdio: "inherit", // Forward the stdio so output is visible
     shell: os === "windows", // Use shell on Windows for proper path handling
+  });
+
+  // Forward the exit code from the child process to the parent
+  child.on("exit", (code) => {
+    if (code !== null && code !== 0) {
+      process.exit(code);
+    }
   });
 };
