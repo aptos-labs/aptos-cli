@@ -116,10 +116,21 @@ jobs:
           PAYLOAD_FILE=$(find artifacts -name "publish-payload.json" | head -1)
           if [ -n "$PAYLOAD_FILE" ]; then
             echo "Validating payload structure..."
-            # Check that the JSON is valid
-            python3 -c "import json; json.load(open('$PAYLOAD_FILE')); print('Valid JSON')"
-            # Check for expected fields
-            python3 -c "import json; f = open('$PAYLOAD_FILE'); payload = json.load(f); print('Payload type:', payload.get('type', 'N/A')); print('Function:', payload.get('function', 'N/A')); args = payload.get('args'); print('Number of args:', len(args) if isinstance(args, list) else 'N/A')"
+            # Validate JSON and check for expected fields
+            python3 - "$PAYLOAD_FILE" << 'EOF'
+          import json
+          import sys
+
+          payload_file = sys.argv[1]
+          with open(payload_file, "r", encoding="utf-8") as f:
+              payload = json.load(f)
+
+          print("Valid JSON")
+          print("Payload type:", payload.get("type", "N/A"))
+          print("Function:", payload.get("function", "N/A"))
+          args = payload.get("args")
+          print("Number of args:", len(args) if isinstance(args, list) else "N/A")
+          EOF
           else
             echo "No payload file found"
             exit 1

@@ -69,7 +69,7 @@ module hello_blockchain::message {
     public entry fun test_update_message(account: signer) acquires MessageHolder {
         let addr = signer::address_of(&account);
         aptos_framework::account::create_account_for_test(addr);
-        
+
         // Set initial message
         set_message(account, std::string::utf8(b"First message"));
         assert!(

@@ -165,7 +165,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: move-artifacts
-          path: publish-payload.json
+          path: your-move-project/publish-payload.json
 
   deploy:
     needs: build
@@ -174,7 +174,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: move-artifacts
-      
+
       - name: Use the payload
         run: |
           # The payload JSON can be used for deployment
