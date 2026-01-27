@@ -6,7 +6,10 @@ import { tmpdir } from "os";
 import { GH_CLI_DOWNLOAD_URL, PNAME } from "../utils/consts.js";
 import { getOS, getTargetPlatform } from "../utils/getUserOs.js";
 import { getLocalBinPath, getBinDir } from "../utils/getLocalBinPath.js";
-import { getLatestVersionGh } from "../utils/ghOperations.js";
+import {
+  getCliVersion,
+  hasUserSpecifiedVersion,
+} from "../utils/ghOperations.js";
 import {
   isBrewAvailable,
   isInstalledViaBrew,
@@ -38,6 +41,9 @@ import {
  * Linux:
  *   - Direct download from GitHub releases
  *
+ * Note: When APTOS_CLI_VERSION is set, package managers are skipped and the
+ * specified version is downloaded directly from GitHub releases.
+ *
  * @param directDownload - If true, skip package managers and download directly
  */
 export const installCli = async (
@@ -45,8 +51,18 @@ export const installCli = async (
 ): Promise<void> => {
   const os = getOS();
 
-  // Skip package managers if directDownload is set
-  if (!directDownload) {
+  // If a specific version is requested, force direct download
+  // Package managers don't support installing specific versions
+  const useDirectDownload = directDownload || hasUserSpecifiedVersion();
+
+  if (useDirectDownload && hasUserSpecifiedVersion()) {
+    console.log(
+      `Using specified version from APTOS_CLI_VERSION: ${process.env.APTOS_CLI_VERSION}`
+    );
+  }
+
+  // Skip package managers if directDownload is set or specific version requested
+  if (!useDirectDownload) {
     // On macOS, prefer Homebrew if available
     if (os === "MacOS" && isBrewAvailable()) {
       if (isInstalledViaBrew()) {
@@ -92,16 +108,18 @@ export const installCli = async (
     mkdirSync(binDir, { recursive: true });
   }
 
-  // Look up the latest version
-  const latestVersion = await getLatestVersionGh();
+  // Get target platform first for version validation
   const targetPlatform = getTargetPlatform();
 
+  // Get the version to install (user-specified or latest)
+  const version = await getCliVersion(targetPlatform);
+
   console.log(
-    `Downloading Aptos CLI version ${latestVersion} for ${targetPlatform}...`
+    `Downloading Aptos CLI version ${version} for ${targetPlatform}...`
   );
 
   // Build download URL matching official release artifact naming
-  const url = `${GH_CLI_DOWNLOAD_URL}/${PNAME}-v${latestVersion}/${PNAME}-${latestVersion}-${targetPlatform}.zip`;
+  const url = `${GH_CLI_DOWNLOAD_URL}/${PNAME}-v${version}/${PNAME}-${version}-${targetPlatform}.zip`;
 
   const tempDir = tmpdir();
 

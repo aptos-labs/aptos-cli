@@ -1,4 +1,4 @@
-import { PNAME } from "./consts.js";
+import { PNAME, GH_CLI_DOWNLOAD_URL } from "./consts.js";
 
 interface GitHubRelease {
   tag_name: string;
@@ -22,6 +22,79 @@ const getGitHubHeaders = (): Record<string, string> => {
   }
 
   return headers;
+};
+
+/**
+ * Get the user-specified CLI version from environment variable.
+ * Returns undefined if not set.
+ */
+export const getUserSpecifiedVersion = (): string | undefined => {
+  const version = process.env.APTOS_CLI_VERSION;
+  if (!version) {
+    return undefined;
+  }
+  // Strip 'v' prefix if present (e.g., "v1.2.3" -> "1.2.3")
+  return version.replace(/^v/, "");
+};
+
+/**
+ * Check if a user has specified a CLI version via environment variable.
+ */
+export const hasUserSpecifiedVersion = (): boolean => {
+  return !!process.env.APTOS_CLI_VERSION;
+};
+
+/**
+ * Validate that a specific version exists by checking if the release assets are accessible.
+ * Uses a HEAD request to avoid downloading the actual file.
+ *
+ * @param version - The version to validate (without 'v' prefix)
+ * @param targetPlatform - The target platform string (e.g., "Ubuntu-22.04-x86_64")
+ */
+export const validateVersionExists = async (
+  version: string,
+  targetPlatform: string
+): Promise<boolean> => {
+  const url = `${GH_CLI_DOWNLOAD_URL}/${PNAME}-v${version}/${PNAME}-${version}-${targetPlatform}.zip`;
+
+  try {
+    const response = await fetch(url, {
+      method: "HEAD",
+      headers: getGitHubHeaders(),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Get the CLI version to use.
+ * If APTOS_CLI_VERSION is set, returns that version (after validation).
+ * Otherwise, returns the latest version from GitHub.
+ *
+ * @param targetPlatform - Optional target platform for version validation
+ */
+export const getCliVersion = async (
+  targetPlatform?: string
+): Promise<string> => {
+  const userVersion = getUserSpecifiedVersion();
+
+  if (userVersion) {
+    // If a target platform is provided, validate the version exists
+    if (targetPlatform) {
+      const exists = await validateVersionExists(userVersion, targetPlatform);
+      if (!exists) {
+        throw new Error(
+          `Specified version ${userVersion} does not exist or is not available for ${targetPlatform}. ` +
+            `Check https://github.com/aptos-labs/aptos-core/releases for available versions.`
+        );
+      }
+    }
+    return userVersion;
+  }
+
+  return getLatestVersionGh();
 };
 
 /**
