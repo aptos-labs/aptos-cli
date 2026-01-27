@@ -95,3 +95,90 @@ To build the project:
 ```bash
 npm run build
 ```
+
+## Building Move Artifacts in CI/CD
+
+The Aptos CLI can be used in CI/CD pipelines to build Move packages and generate deployment payloads. This is useful for automated deployments and multi-step workflows.
+
+### Example: Building Publish Payload
+
+```yaml
+# In your GitHub Actions workflow
+
+# Prerequisites: Set up Node.js first
+- name: Setup Node.js
+  uses: actions/setup-node@v4
+  with:
+    node-version: "20"
+
+- name: Install Aptos CLI npm package
+  run: npm install @aptos-labs/aptos-cli
+
+- name: Install Aptos CLI
+  run: npx aptos --install
+
+- name: Build Move package
+  working-directory: your-move-project
+  run: |
+    ~/.local/bin/aptos move compile \
+      --named-addresses your_module=0x1 \
+      --save-metadata
+
+- name: Generate publish payload
+  working-directory: your-move-project
+  run: |
+    ~/.local/bin/aptos move build-publish-payload \
+      --named-addresses your_module=0x1 \
+      --json-output-file publish-payload.json \
+      --assume-yes
+
+- name: Upload artifact for later steps
+  uses: actions/upload-artifact@v4
+  with:
+    name: move-artifacts
+    path: your-move-project/publish-payload.json
+```
+
+### Example: Building Upgrade Payload (Object Code Deployment)
+
+For upgrading existing object-deployed contracts:
+
+```yaml
+- name: Generate upgrade payload
+  working-directory: your-move-project
+  run: |
+    ~/.local/bin/aptos move build-upgrade-payload \
+      --named-addresses your_module=0x1 \
+      --object-address 0xYOUR_OBJECT_ADDRESS \
+      --json-output-file upgrade-payload.json \
+      --assume-yes
+```
+
+### Using Artifacts in Subsequent Jobs
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # ... build steps above ...
+      - uses: actions/upload-artifact@v4
+        with:
+          name: move-artifacts
+          path: your-move-project/publish-payload.json
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: move-artifacts
+
+      - name: Use the payload
+        run: |
+          # The payload JSON can be used for deployment
+          cat publish-payload.json
+```
+
+See the [build-move-artifacts.yaml](.github/workflows/build-move-artifacts.yaml) workflow for a complete working example.
