@@ -26,7 +26,7 @@ All notable changes to `@aptos-labs/aptos-cli` npm package will be documented in
   - Added cleanup of temporary files after installation
   - Improved error handling for network errors
 
-## [1.1.0] - Previous Release
+## [1.1.0]
 
 - Initial stable release with Homebrew support on macOS
 - GitHub direct download for Linux and Windows
