@@ -26,6 +26,7 @@ vi.mock("../utils/getUserOs.js", () => ({
 vi.mock("../utils/getLocalBinPath.js", () => ({
   getLocalBinPath: vi.fn(),
   getBinDir: vi.fn(),
+  invalidateBinPathCache: vi.fn(),
 }));
 
 vi.mock("../utils/ghOperations.js", () => ({

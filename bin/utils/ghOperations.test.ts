@@ -193,12 +193,16 @@ describe("ghOperations", () => {
 
     it("should reject invalid version strings", () => {
       process.env.APTOS_CLI_VERSION = "not-a-version";
-      expect(() => getUserSpecifiedVersion()).toThrow("Invalid APTOS_CLI_VERSION");
+      expect(() => getUserSpecifiedVersion()).toThrow(
+        "Invalid APTOS_CLI_VERSION",
+      );
     });
 
     it("should reject version with shell metacharacters", () => {
       process.env.APTOS_CLI_VERSION = '1.0.0"; rm -rf /; echo "';
-      expect(() => getUserSpecifiedVersion()).toThrow("Invalid APTOS_CLI_VERSION");
+      expect(() => getUserSpecifiedVersion()).toThrow(
+        "Invalid APTOS_CLI_VERSION",
+      );
     });
   });
 

@@ -8,7 +8,11 @@ import {
   isInstalledViaBrew,
 } from "../utils/brewOperations.js";
 import { GH_CLI_DOWNLOAD_URL, PNAME } from "../utils/consts.js";
-import { getBinDir, getLocalBinPath } from "../utils/getLocalBinPath.js";
+import {
+  getBinDir,
+  getLocalBinPath,
+  invalidateBinPathCache,
+} from "../utils/getLocalBinPath.js";
 import { getOS, getTargetPlatform } from "../utils/getUserOs.js";
 import {
   getCliVersion,
@@ -48,6 +52,7 @@ import {
 export const installCli = async (
   directDownload: boolean = false,
 ): Promise<void> => {
+  invalidateBinPathCache();
   const os = getOS();
 
   // If a specific version is requested, force direct download

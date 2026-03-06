@@ -1,7 +1,10 @@
 import { existsSync, unlinkSync } from "node:fs";
 import { isInstalledViaBrew, updateViaBrew } from "../utils/brewOperations.js";
 import { execSyncShell } from "../utils/execSyncShell.js";
-import { getLocalBinPath } from "../utils/getLocalBinPath.js";
+import {
+  getLocalBinPath,
+  invalidateBinPathCache,
+} from "../utils/getLocalBinPath.js";
 import { getTargetPlatform } from "../utils/getUserOs.js";
 import {
   getCliVersion,
@@ -32,6 +35,7 @@ import { installCli } from "./install.js";
 export const updateCli = async (
   directDownload: boolean = false,
 ): Promise<void> => {
+  invalidateBinPathCache();
   const binaryPath = getLocalBinPath();
 
   if (!existsSync(binaryPath)) {
