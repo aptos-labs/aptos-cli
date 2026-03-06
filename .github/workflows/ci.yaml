@@ -15,8 +15,22 @@ jobs:
       - run: biome check
 
   build-and-test:
-    name: Build & Test
-    runs-on: ubuntu-latest
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: Linux x86_64
+            runner: ubuntu-latest
+          - os: Linux ARM64
+            runner: ubuntu-24.04-arm
+          - os: macOS x86_64
+            runner: macos-15-intel
+          - os: macOS ARM64
+            runner: macos-latest
+          - os: Windows x86_64
+            runner: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
