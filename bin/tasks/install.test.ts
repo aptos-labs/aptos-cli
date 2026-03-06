@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock all dependencies before importing the module under test
 vi.mock("child_process", () => ({
@@ -48,28 +48,28 @@ vi.mock("../utils/windowsPackageManagers.js", () => ({
   installViaChoco: vi.fn(),
 }));
 
-import { installCli } from "./install.js";
-import { execSync } from "child_process";
-import { existsSync, mkdirSync } from "fs";
+import { execSync } from "node:child_process";
+import { existsSync, mkdirSync } from "node:fs";
+import {
+  installViaBrew,
+  isBrewAvailable,
+  isInstalledViaBrew,
+} from "../utils/brewOperations.js";
+import { getBinDir, getLocalBinPath } from "../utils/getLocalBinPath.js";
 import { getOS, getTargetPlatform } from "../utils/getUserOs.js";
-import { getLocalBinPath, getBinDir } from "../utils/getLocalBinPath.js";
 import {
   getCliVersion,
   hasUserSpecifiedVersion,
 } from "../utils/ghOperations.js";
 import {
-  isBrewAvailable,
-  isInstalledViaBrew,
-  installViaBrew,
-} from "../utils/brewOperations.js";
-import {
-  isWingetAvailable,
-  isChocoAvailable,
-  isInstalledViaWinget,
-  isInstalledViaChoco,
-  installViaWinget,
   installViaChoco,
+  installViaWinget,
+  isChocoAvailable,
+  isInstalledViaChoco,
+  isInstalledViaWinget,
+  isWingetAvailable,
 } from "../utils/windowsPackageManagers.js";
+import { installCli } from "./install.js";
 
 describe("install", () => {
   beforeEach(() => {
@@ -192,7 +192,7 @@ describe("install", () => {
       expect(installViaChoco).not.toHaveBeenCalled();
       expect(execSync).toHaveBeenCalledWith(
         expect.stringContaining("powershell"),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -224,7 +224,7 @@ describe("install", () => {
 
       expect(execSync).toHaveBeenCalledWith(
         expect.stringContaining("curl"),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -306,7 +306,7 @@ describe("install", () => {
       // Verify the URL contains the specific version
       expect(execSync).toHaveBeenCalledWith(
         expect.stringContaining("4.5.0"),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });

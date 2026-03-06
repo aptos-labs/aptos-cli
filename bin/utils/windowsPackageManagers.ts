@@ -1,5 +1,5 @@
-import { execSync } from "child_process";
-import { existsSync } from "fs";
+import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { executableIsAvailable } from "./executableIsAvailable.js";
 
 /**
@@ -102,9 +102,12 @@ export const getCliPathChoco = (): string | null => {
  */
 export const installViaWinget = (): void => {
   console.log("Installing Aptos CLI via winget...");
-  execSync("winget install --id Aptos.Aptos --silent --accept-package-agreements --accept-source-agreements", {
-    stdio: "inherit",
-  });
+  execSync(
+    "winget install --id Aptos.Aptos --silent --accept-package-agreements --accept-source-agreements",
+    {
+      stdio: "inherit",
+    },
+  );
 };
 
 /**
@@ -120,9 +123,12 @@ export const installViaChoco = (): void => {
  */
 export const updateViaWinget = (): void => {
   console.log("Updating Aptos CLI via winget...");
-  execSync("winget upgrade --id Aptos.Aptos --silent --accept-package-agreements --accept-source-agreements", {
-    stdio: "inherit",
-  });
+  execSync(
+    "winget upgrade --id Aptos.Aptos --silent --accept-package-agreements --accept-source-agreements",
+    {
+      stdio: "inherit",
+    },
+  );
 };
 
 /**

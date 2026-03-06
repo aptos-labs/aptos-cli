@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import * as os from "os";
+import type * as os from "node:os";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // We need to mock the os module before importing the module under test
 vi.mock("os", async () => {
@@ -21,9 +21,9 @@ vi.mock("fs", async () => {
   };
 });
 
-import { getPlatformInfo, getTargetPlatform, getOS } from "./getUserOs.js";
-import { existsSync, readFileSync } from "fs";
-import { platform, arch } from "os";
+import { existsSync, readFileSync } from "node:fs";
+import { arch, platform } from "node:os";
+import { getOS, getPlatformInfo, getTargetPlatform } from "./getUserOs.js";
 
 describe("getUserOs", () => {
   beforeEach(() => {
@@ -110,7 +110,7 @@ describe("getUserOs", () => {
       vi.mocked(arch).mockReturnValue("x64");
       vi.mocked(existsSync).mockReturnValue(true);
       vi.mocked(readFileSync).mockReturnValue(
-        'ID=ubuntu\nVERSION_ID="24.04"\n'
+        'ID=ubuntu\nVERSION_ID="24.04"\n',
       );
 
       expect(getTargetPlatform()).toBe("Ubuntu-24.04-x86_64");
@@ -121,7 +121,7 @@ describe("getUserOs", () => {
       vi.mocked(arch).mockReturnValue("x64");
       vi.mocked(existsSync).mockReturnValue(true);
       vi.mocked(readFileSync).mockReturnValue(
-        'ID=ubuntu\nVERSION_ID="22.04"\n'
+        'ID=ubuntu\nVERSION_ID="22.04"\n',
       );
 
       expect(getTargetPlatform()).toBe("Ubuntu-22.04-x86_64");
@@ -164,7 +164,7 @@ describe("getUserOs", () => {
       vi.mocked(arch).mockReturnValue("arm64");
 
       expect(() => getTargetPlatform()).toThrow(
-        "Windows ARM64 is not currently supported"
+        "Windows ARM64 is not currently supported",
       );
     });
   });

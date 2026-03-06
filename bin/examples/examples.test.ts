@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { existsSync, readFileSync } from "fs";
-import { join } from "path";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
 
 const WORKSPACE_ROOT = join(__dirname, "../..");
 const EXAMPLES_DIR = join(WORKSPACE_ROOT, "examples");
@@ -13,11 +13,11 @@ describe("Example Move Projects", () => {
       expect(existsSync(moveTomlPath)).toBe(true);
 
       const content = readFileSync(moveTomlPath, "utf-8");
-      expect(content).toContain('[package]');
+      expect(content).toContain("[package]");
       expect(content).toContain('name = "HelloBlockchain"');
-      expect(content).toContain('[addresses]');
-      expect(content).toContain('hello_blockchain');
-      expect(content).toContain('[dependencies.AptosFramework]');
+      expect(content).toContain("[addresses]");
+      expect(content).toContain("hello_blockchain");
+      expect(content).toContain("[dependencies.AptosFramework]");
     });
 
     it("should have source files", () => {
@@ -29,7 +29,10 @@ describe("Example Move Projects", () => {
     });
 
     it("should have valid Move module structure", () => {
-      const messageMovePath = join(HELLO_BLOCKCHAIN_DIR, "sources/message.move");
+      const messageMovePath = join(
+        HELLO_BLOCKCHAIN_DIR,
+        "sources/message.move",
+      );
       const content = readFileSync(messageMovePath, "utf-8");
 
       // Verify module declaration
@@ -46,7 +49,10 @@ describe("Example Move Projects", () => {
 });
 
 describe("Build Move Artifacts Workflow", () => {
-  const workflowPath = join(WORKSPACE_ROOT, ".github/workflows/build-move-artifacts.yaml");
+  const workflowPath = join(
+    WORKSPACE_ROOT,
+    ".github/workflows/build-move-artifacts.yaml",
+  );
 
   it("should have the workflow file", () => {
     expect(existsSync(workflowPath)).toBe(true);

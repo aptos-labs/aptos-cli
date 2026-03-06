@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { execSync } from "child_process";
-import { existsSync } from "fs";
+import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("child_process", () => ({
   execSync: vi.fn(),
@@ -15,10 +15,10 @@ vi.mock("./executableIsAvailable.js", () => ({
 }));
 
 import {
-  isBrewAvailable,
-  isInstalledViaBrew,
   getCliPathBrew,
   installViaBrew,
+  isBrewAvailable,
+  isInstalledViaBrew,
   updateViaBrew,
 } from "./brewOperations.js";
 import { executableIsAvailable } from "./executableIsAvailable.js";

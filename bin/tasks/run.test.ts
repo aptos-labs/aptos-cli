@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Create a mock child process that can emit events
 const createMockChildProcess = () => {
@@ -25,9 +25,9 @@ vi.mock("../utils/getLocalBinPath.js", () => ({
   getLocalBinPath: vi.fn(() => "/home/user/.local/bin/aptos"),
 }));
 
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { runCLI } from "./run.js";
-import { spawn } from "child_process";
-import { existsSync } from "fs";
 
 describe("run", () => {
   const mockExit = vi.fn<(code?: number) => never>();
@@ -56,7 +56,7 @@ describe("run", () => {
         ["info", "--verbose"],
         expect.objectContaining({
           stdio: "inherit",
-        })
+        }),
       );
     });
 
@@ -68,7 +68,7 @@ describe("run", () => {
       expect(spawn).toHaveBeenCalledWith(
         "/custom/path/aptos",
         ["info"],
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -118,12 +118,14 @@ describe("run", () => {
 
     it("should print error and exit if custom binary path does not exist", async () => {
       vi.mocked(existsSync).mockReturnValue(false);
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       await runCLI(["info"], "/nonexistent/path/aptos");
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "Error: Binary not found at specified path: /nonexistent/path/aptos"
+        "Error: Binary not found at specified path: /nonexistent/path/aptos",
       );
       expect(mockExit).toHaveBeenCalledWith(1);
       expect(spawn).not.toHaveBeenCalled();
@@ -136,7 +138,7 @@ describe("run", () => {
       await runCLI(["info"]);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "Aptos CLI not installed, run `npx aptos --install` to install"
+        "Aptos CLI not installed, run `npx aptos --install` to install",
       );
       expect(spawn).not.toHaveBeenCalled();
     });

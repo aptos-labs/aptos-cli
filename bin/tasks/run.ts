@@ -1,8 +1,7 @@
-import { spawn } from "child_process";
-import { existsSync } from "fs";
-
-import { getPlatformInfo } from "../utils/getUserOs.js";
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { getLocalBinPath } from "../utils/getLocalBinPath.js";
+import { getPlatformInfo } from "../utils/getUserOs.js";
 
 /**
  * Run the Aptos CLI with the provided arguments.
@@ -11,7 +10,7 @@ import { getLocalBinPath } from "../utils/getLocalBinPath.js";
  */
 export const runCLI = async (
   args: string[] = [],
-  binaryPath?: string
+  binaryPath?: string,
 ): Promise<void> => {
   const cliPath = binaryPath || getLocalBinPath();
 
@@ -21,7 +20,7 @@ export const runCLI = async (
       process.exit(1);
     }
     console.log(
-      "Aptos CLI not installed, run `npx aptos --install` to install"
+      "Aptos CLI not installed, run `npx aptos --install` to install",
     );
     return;
   }

@@ -26,9 +26,15 @@ pnpm run test:watch
 
 # Run a single test file
 pnpm vitest run bin/tasks/install.test.ts
+
+# Lint and format check
+pnpm run check
+
+# Auto-fix lint and formatting issues
+pnpm run check:fix
 ```
 
-There is no linter or formatter configured. TypeScript strict mode (`tsc`) is the primary code quality check.
+Uses Biome for linting and formatting (config in `biome.json`). TypeScript strict mode (`tsc`) provides type checking. Node.js imports must use the `node:` protocol (e.g., `import { existsSync } from "node:fs"`).
 
 ## Architecture
 

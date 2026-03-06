@@ -1,12 +1,12 @@
-import { join } from "path";
-import { homedir } from "os";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { getCliPathBrew, isInstalledViaBrew } from "./brewOperations.js";
 import { getOS } from "./getUserOs.js";
-import { isInstalledViaBrew, getCliPathBrew } from "./brewOperations.js";
 import {
-  isInstalledViaWinget,
-  isInstalledViaChoco,
-  getCliPathWinget,
   getCliPathChoco,
+  getCliPathWinget,
+  isInstalledViaChoco,
+  isInstalledViaWinget,
 } from "./windowsPackageManagers.js";
 
 /**

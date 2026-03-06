@@ -1,4 +1,4 @@
-import { PNAME, GH_CLI_DOWNLOAD_URL } from "./consts.js";
+import { GH_CLI_DOWNLOAD_URL, PNAME } from "./consts.js";
 
 interface GitHubRelease {
   tag_name: string;
@@ -53,7 +53,7 @@ export const hasUserSpecifiedVersion = (): boolean => {
  */
 export const validateVersionExists = async (
   version: string,
-  targetPlatform: string
+  targetPlatform: string,
 ): Promise<boolean> => {
   const url = `${GH_CLI_DOWNLOAD_URL}/${PNAME}-v${version}/${PNAME}-${version}-${targetPlatform}.zip`;
 
@@ -76,7 +76,7 @@ export const validateVersionExists = async (
  * @param targetPlatform - Optional target platform for version validation
  */
 export const getCliVersion = async (
-  targetPlatform?: string
+  targetPlatform?: string,
 ): Promise<string> => {
   const userVersion = getUserSpecifiedVersion();
 
@@ -87,7 +87,7 @@ export const getCliVersion = async (
       if (!exists) {
         throw new Error(
           `Specified version ${userVersion} does not exist or is not available for ${targetPlatform}. ` +
-            `Check https://github.com/aptos-labs/aptos-core/releases for available versions.`
+            `Check https://github.com/aptos-labs/aptos-core/releases for available versions.`,
         );
       }
     }
@@ -113,18 +113,18 @@ export const getLatestVersionGh = async (): Promise<string> => {
     response = await fetch(url, { headers: getGitHubHeaders() });
   } catch (error) {
     throw new Error(
-      `Failed to fetch releases from GitHub: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to fetch releases from GitHub: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 
   if (!response.ok) {
     if (response.status === 403 || response.status === 429) {
       throw new Error(
-        "GitHub API rate limit exceeded. Please try again later or set a GITHUB_TOKEN environment variable."
+        "GitHub API rate limit exceeded. Please try again later or set a GITHUB_TOKEN environment variable.",
       );
     }
     throw new Error(
-      `GitHub API request failed with status ${response.status}: ${response.statusText}`
+      `GitHub API request failed with status ${response.status}: ${response.statusText}`,
     );
   }
 
@@ -146,6 +146,6 @@ export const getLatestVersionGh = async (): Promise<string> => {
   }
 
   throw new Error(
-    "Could not determine latest version of Aptos CLI. No matching release found in the last 100 releases."
+    "Could not determine latest version of Aptos CLI. No matching release found in the last 100 releases.",
   );
 };
