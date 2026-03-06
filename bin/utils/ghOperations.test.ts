@@ -185,6 +185,21 @@ describe("ghOperations", () => {
       process.env.APTOS_CLI_VERSION = "2.0.0";
       expect(getUserSpecifiedVersion()).toBe("2.0.0");
     });
+
+    it("should accept pre-release versions", () => {
+      process.env.APTOS_CLI_VERSION = "v1.2.3-rc.1";
+      expect(getUserSpecifiedVersion()).toBe("1.2.3-rc.1");
+    });
+
+    it("should reject invalid version strings", () => {
+      process.env.APTOS_CLI_VERSION = "not-a-version";
+      expect(() => getUserSpecifiedVersion()).toThrow("Invalid APTOS_CLI_VERSION");
+    });
+
+    it("should reject version with shell metacharacters", () => {
+      process.env.APTOS_CLI_VERSION = '1.0.0"; rm -rf /; echo "';
+      expect(() => getUserSpecifiedVersion()).toThrow("Invalid APTOS_CLI_VERSION");
+    });
   });
 
   describe("hasUserSpecifiedVersion", () => {

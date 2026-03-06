@@ -34,7 +34,13 @@ export const getUserSpecifiedVersion = (): string | undefined => {
     return undefined;
   }
   // Strip 'v' prefix if present (e.g., "v1.2.3" -> "1.2.3")
-  return version.replace(/^v/, "");
+  const stripped = version.replace(/^v/, "");
+  if (!/^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?$/.test(stripped)) {
+    throw new Error(
+      `Invalid APTOS_CLI_VERSION: "${version}". Must match MAJOR.MINOR.PATCH (e.g. "4.5.0" or "v4.5.0").`,
+    );
+  }
+  return stripped;
 };
 
 /**
