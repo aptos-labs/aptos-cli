@@ -9,7 +9,7 @@ Node.js npm package (`@aptos-labs/aptos-cli`) that wraps the Aptos blockchain CL
 ## Commands
 
 ```bash
-# Install dependencies (pnpm is the package manager, but npm works too)
+# Install dependencies (requires pnpm; enable via: corepack enable pnpm)
 pnpm install
 
 # Build (cleans dist/ then compiles TypeScript)
@@ -49,7 +49,7 @@ Uses Biome for linting and formatting (config in `biome.json`). TypeScript stric
 - `getUserOs.ts` — Detects OS, architecture, and Ubuntu version; returns a `TargetPlatform` string used for GitHub release artifact naming
 - `ghOperations.ts` — GitHub API interactions for fetching releases and validating versions
 - `brewOperations.ts` / `windowsPackageManagers.ts` — Package manager detection and installation
-- `getLocalBinPath.ts` — Resolves install path (`~/.local/bin/` on Unix, `%APPDATA%\local\bin\` on Windows)
+- `getLocalBinPath.ts` — Resolves install path (`~/.local/bin/` on Unix, `%USERPROFILE%\.aptoscli\bin\` on Windows)
 - `consts.ts` — Shared constants
 
 **Build output**: TypeScript in `bin/` compiles to `dist/` (ES2020 modules, strict mode, source maps, declarations).

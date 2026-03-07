@@ -12,6 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: biomejs/setup-biome@v2
+        with:
+          version: 2.4.6
       - run: biome check
 
   build-and-test:
