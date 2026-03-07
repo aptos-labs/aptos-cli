@@ -30,7 +30,8 @@ program
     "-d, --direct-download",
     "skip package managers and download directly from GitHub",
   )
-  .allowUnknownOption();
+  .allowUnknownOption()
+  .allowExcessArguments(true);
 
 program.parse(process.argv);
 
