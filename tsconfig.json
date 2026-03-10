@@ -1,24 +1,23 @@
 {
   "compilerOptions": {
-    "moduleResolution": "node",
-    "noImplicitAny": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "ES2022",
+    "rootDir": "./bin",
+    "outDir": "dist",
+    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": true,
-    "forceConsistentCasingInFileNames": true,
-    "outDir": "dist",
-    "declaration": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "target": "ES2022",
-    "module": "ES2020",
-    "skipLibCheck": true,
-    "esModuleInterop": true
+    "inlineSources": true
   },
-  "include": ["./bin"],
-  "exclude": ["node_modules"]
+  "include": ["./bin"]
 }
