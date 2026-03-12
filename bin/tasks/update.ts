@@ -1,20 +1,22 @@
-import { existsSync, unlinkSync } from "fs";
-
-import { getLocalBinPath } from "../utils/getLocalBinPath.js";
+import { existsSync, unlinkSync } from "node:fs";
+import { isInstalledViaBrew, updateViaBrew } from "../utils/brewOperations.js";
+import { execSyncShell } from "../utils/execSyncShell.js";
+import {
+  getLocalBinPath,
+  invalidateBinPathCache,
+} from "../utils/getLocalBinPath.js";
+import { getTargetPlatform } from "../utils/getUserOs.js";
 import {
   getCliVersion,
   hasUserSpecifiedVersion,
 } from "../utils/ghOperations.js";
-import { getTargetPlatform } from "../utils/getUserOs.js";
-import { execSyncShell } from "../utils/execSyncShell.js";
-import { installCli } from "./install.js";
-import { isInstalledViaBrew, updateViaBrew } from "../utils/brewOperations.js";
 import {
-  isInstalledViaWinget,
   isInstalledViaChoco,
-  updateViaWinget,
+  isInstalledViaWinget,
   updateViaChoco,
+  updateViaWinget,
 } from "../utils/windowsPackageManagers.js";
+import { installCli } from "./install.js";
 
 /**
  * Update the Aptos CLI to the latest version (or a specific version if APTOS_CLI_VERSION is set).
@@ -31,13 +33,14 @@ import {
  * @param directDownload - If true, skip package manager updates and force direct download
  */
 export const updateCli = async (
-  directDownload: boolean = false
+  directDownload: boolean = false,
 ): Promise<void> => {
+  invalidateBinPathCache();
   const binaryPath = getLocalBinPath();
 
   if (!existsSync(binaryPath)) {
     console.log(
-      "Aptos CLI not installed, run `npx aptos --install` to install"
+      "Aptos CLI not installed, run `npx aptos --install` to install",
     );
     return;
   }
@@ -47,7 +50,7 @@ export const updateCli = async (
 
   if (useDirectDownload && hasUserSpecifiedVersion()) {
     console.log(
-      `Using specified version from APTOS_CLI_VERSION: ${process.env.APTOS_CLI_VERSION}`
+      `Using specified version from APTOS_CLI_VERSION: ${process.env.APTOS_CLI_VERSION}`,
     );
   }
 
@@ -84,7 +87,7 @@ export const updateCli = async (
     const versionOutput = String(
       execSyncShell(`"${binaryPath}" --version`, {
         encoding: "utf8",
-      })
+      }),
     ).trim();
     // Version output format: "aptos X.Y.Z"
     currentVersion = versionOutput.split(" ")[1] || "";
@@ -97,7 +100,7 @@ export const updateCli = async (
   if (currentVersion === targetVersion) {
     if (hasUserSpecifiedVersion()) {
       console.log(
-        `CLI is already at the specified version (${currentVersion})`
+        `CLI is already at the specified version (${currentVersion})`,
       );
     } else {
       console.log(`CLI is up to date (version ${currentVersion})`);

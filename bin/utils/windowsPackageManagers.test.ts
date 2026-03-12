@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { execSync } from "child_process";
-import { existsSync } from "fs";
+import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("child_process", () => ({
   execSync: vi.fn(),
@@ -14,20 +14,20 @@ vi.mock("./executableIsAvailable.js", () => ({
   executableIsAvailable: vi.fn(),
 }));
 
-import {
-  isWingetAvailable,
-  isChocoAvailable,
-  isInstalledViaWinget,
-  isInstalledViaChoco,
-  getCliPathWinget,
-  getCliPathChoco,
-  installViaWinget,
-  installViaChoco,
-  updateViaWinget,
-  updateViaChoco,
-  detectWindowsPackageManager,
-} from "./windowsPackageManagers.js";
 import { executableIsAvailable } from "./executableIsAvailable.js";
+import {
+  detectWindowsPackageManager,
+  getCliPathChoco,
+  getCliPathWinget,
+  installViaChoco,
+  installViaWinget,
+  isChocoAvailable,
+  isInstalledViaChoco,
+  isInstalledViaWinget,
+  isWingetAvailable,
+  updateViaChoco,
+  updateViaWinget,
+} from "./windowsPackageManagers.js";
 
 describe("windowsPackageManagers", () => {
   beforeEach(() => {
@@ -150,7 +150,7 @@ describe("windowsPackageManagers", () => {
       vi.mocked(existsSync).mockReturnValue(true);
 
       expect(getCliPathChoco()).toBe(
-        "C:\\ProgramData\\chocolatey\\bin\\aptos.exe"
+        "C:\\ProgramData\\chocolatey\\bin\\aptos.exe",
       );
     });
 
@@ -169,7 +169,7 @@ describe("windowsPackageManagers", () => {
 
       expect(execSync).toHaveBeenCalledWith(
         "winget install --id Aptos.Aptos --silent --accept-package-agreements --accept-source-agreements",
-        { stdio: "inherit" }
+        { stdio: "inherit" },
       );
     });
   });
@@ -194,7 +194,7 @@ describe("windowsPackageManagers", () => {
 
       expect(execSync).toHaveBeenCalledWith(
         "winget upgrade --id Aptos.Aptos --silent --accept-package-agreements --accept-source-agreements",
-        { stdio: "inherit" }
+        { stdio: "inherit" },
       );
     });
   });

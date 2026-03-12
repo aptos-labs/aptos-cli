@@ -15,20 +15,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: "22"
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: npm run build
+        run: pnpm build
 
       - name: Run tests
-        run: npm test
+        run: pnpm test
 
       - name: Display system info
         shell: pwsh
@@ -94,19 +95,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: "22"
+          cache: pnpm
 
       - name: Install dependencies
         shell: cmd
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build
         shell: cmd
-        run: npm run build
+        run: pnpm build
 
       - name: Test CLI installation
         shell: cmd

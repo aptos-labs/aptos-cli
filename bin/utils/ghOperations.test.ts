@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock global fetch
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 import {
+  getCliVersion,
   getLatestVersionGh,
   getUserSpecifiedVersion,
   hasUserSpecifiedVersion,
   validateVersionExists,
-  getCliVersion,
 } from "./ghOperations.js";
 
 describe("ghOperations", () => {
@@ -44,7 +44,7 @@ describe("ghOperations", () => {
             Accept: "application/vnd.github.v3+json",
             "User-Agent": "aptos-cli-npm",
           }),
-        })
+        }),
       );
     });
 
@@ -64,7 +64,7 @@ describe("ghOperations", () => {
           headers: expect.objectContaining({
             Authorization: "Bearer test-token",
           }),
-        })
+        }),
       );
     });
 
@@ -91,7 +91,7 @@ describe("ghOperations", () => {
       });
 
       await expect(getLatestVersionGh()).rejects.toThrow(
-        "GitHub API rate limit exceeded"
+        "GitHub API rate limit exceeded",
       );
     });
 
@@ -103,7 +103,7 @@ describe("ghOperations", () => {
       });
 
       await expect(getLatestVersionGh()).rejects.toThrow(
-        "GitHub API rate limit exceeded"
+        "GitHub API rate limit exceeded",
       );
     });
 
@@ -115,7 +115,7 @@ describe("ghOperations", () => {
       });
 
       await expect(getLatestVersionGh()).rejects.toThrow(
-        "GitHub API request failed with status 500"
+        "GitHub API request failed with status 500",
       );
     });
 
@@ -123,7 +123,7 @@ describe("ghOperations", () => {
       mockFetch.mockRejectedValue(new Error("Network error"));
 
       await expect(getLatestVersionGh()).rejects.toThrow(
-        "Failed to fetch releases from GitHub"
+        "Failed to fetch releases from GitHub",
       );
     });
 
@@ -138,7 +138,7 @@ describe("ghOperations", () => {
       });
 
       await expect(getLatestVersionGh()).rejects.toThrow(
-        "Could not determine latest version of Aptos CLI"
+        "Could not determine latest version of Aptos CLI",
       );
     });
 
@@ -149,7 +149,7 @@ describe("ghOperations", () => {
       });
 
       await expect(getLatestVersionGh()).rejects.toThrow(
-        "Failed to parse GitHub API response"
+        "Failed to parse GitHub API response",
       );
     });
 
@@ -160,7 +160,7 @@ describe("ghOperations", () => {
       });
 
       await expect(getLatestVersionGh()).rejects.toThrow(
-        "Unexpected response format"
+        "Unexpected response format",
       );
     });
   });
@@ -184,6 +184,25 @@ describe("ghOperations", () => {
     it("should handle version without v prefix", () => {
       process.env.APTOS_CLI_VERSION = "2.0.0";
       expect(getUserSpecifiedVersion()).toBe("2.0.0");
+    });
+
+    it("should accept pre-release versions", () => {
+      process.env.APTOS_CLI_VERSION = "v1.2.3-rc.1";
+      expect(getUserSpecifiedVersion()).toBe("1.2.3-rc.1");
+    });
+
+    it("should reject invalid version strings", () => {
+      process.env.APTOS_CLI_VERSION = "not-a-version";
+      expect(() => getUserSpecifiedVersion()).toThrow(
+        "Invalid APTOS_CLI_VERSION",
+      );
+    });
+
+    it("should reject version with shell metacharacters", () => {
+      process.env.APTOS_CLI_VERSION = '1.0.0"; rm -rf /; echo "';
+      expect(() => getUserSpecifiedVersion()).toThrow(
+        "Invalid APTOS_CLI_VERSION",
+      );
     });
   });
 
@@ -213,7 +232,7 @@ describe("ghOperations", () => {
       expect(result).toBe(true);
       expect(mockFetch).toHaveBeenCalledWith(
         "https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v1.0.0/aptos-cli-1.0.0-Linux-x86_64.zip",
-        expect.objectContaining({ method: "HEAD" })
+        expect.objectContaining({ method: "HEAD" }),
       );
     });
 
@@ -245,7 +264,7 @@ describe("ghOperations", () => {
           headers: expect.objectContaining({
             Authorization: "Bearer test-token",
           }),
-        })
+        }),
       );
     });
   });
@@ -282,7 +301,7 @@ describe("ghOperations", () => {
       expect(version).toBe("1.5.0");
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("1.5.0"),
-        expect.objectContaining({ method: "HEAD" })
+        expect.objectContaining({ method: "HEAD" }),
       );
     });
 
@@ -291,7 +310,7 @@ describe("ghOperations", () => {
       mockFetch.mockResolvedValue({ ok: false });
 
       await expect(getCliVersion("Linux-x86_64")).rejects.toThrow(
-        "Specified version 99.99.99 does not exist"
+        "Specified version 99.99.99 does not exist",
       );
     });
 

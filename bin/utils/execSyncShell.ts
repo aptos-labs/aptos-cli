@@ -1,4 +1,4 @@
-import { execSync, ExecSyncOptions } from "child_process";
+import { type ExecSyncOptions, execSync } from "node:child_process";
 
 type ExecSyncShellOptions = Omit<ExecSyncOptions, "shell">;
 
@@ -8,7 +8,7 @@ type ExecSyncShellOptions = Omit<ExecSyncOptions, "shell">;
  */
 export const execSyncShell = (
   command: string,
-  options?: ExecSyncShellOptions
+  options?: ExecSyncShellOptions,
 ): Buffer | string => {
   // Type assertion needed due to @types/node ExecSyncOptions overload complexity
   // where shell is typed as string | boolean but overloads expect specific types

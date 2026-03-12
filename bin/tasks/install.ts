@@ -1,27 +1,30 @@
-import { execSync } from "child_process";
-import { existsSync, chmodSync, mkdirSync } from "fs";
-import { join } from "path";
-import { tmpdir } from "os";
-
+import { execSync } from "node:child_process";
+import { chmodSync, existsSync, mkdirSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import {
+  installViaBrew,
+  isBrewAvailable,
+  isInstalledViaBrew,
+} from "../utils/brewOperations.js";
 import { GH_CLI_DOWNLOAD_URL, PNAME } from "../utils/consts.js";
+import {
+  getBinDir,
+  getLocalBinPath,
+  invalidateBinPathCache,
+} from "../utils/getLocalBinPath.js";
 import { getOS, getTargetPlatform } from "../utils/getUserOs.js";
-import { getLocalBinPath, getBinDir } from "../utils/getLocalBinPath.js";
 import {
   getCliVersion,
   hasUserSpecifiedVersion,
 } from "../utils/ghOperations.js";
 import {
-  isBrewAvailable,
-  isInstalledViaBrew,
-  installViaBrew,
-} from "../utils/brewOperations.js";
-import {
-  isWingetAvailable,
-  isChocoAvailable,
-  isInstalledViaWinget,
-  isInstalledViaChoco,
-  installViaWinget,
   installViaChoco,
+  installViaWinget,
+  isChocoAvailable,
+  isInstalledViaChoco,
+  isInstalledViaWinget,
+  isWingetAvailable,
 } from "../utils/windowsPackageManagers.js";
 
 /**
@@ -47,8 +50,9 @@ import {
  * @param directDownload - If true, skip package managers and download directly
  */
 export const installCli = async (
-  directDownload: boolean = false
+  directDownload: boolean = false,
 ): Promise<void> => {
+  invalidateBinPathCache();
   const os = getOS();
 
   // If a specific version is requested, force direct download
@@ -57,7 +61,7 @@ export const installCli = async (
 
   if (useDirectDownload && hasUserSpecifiedVersion()) {
     console.log(
-      `Using specified version from APTOS_CLI_VERSION: ${process.env.APTOS_CLI_VERSION}`
+      `Using specified version from APTOS_CLI_VERSION: ${process.env.APTOS_CLI_VERSION}`,
     );
   }
 
@@ -115,7 +119,7 @@ export const installCli = async (
   const version = await getCliVersion(targetPlatform);
 
   console.log(
-    `Downloading Aptos CLI version ${version} for ${targetPlatform}...`
+    `Downloading Aptos CLI version ${version} for ${targetPlatform}...`,
   );
 
   // Build download URL matching official release artifact naming
@@ -132,7 +136,7 @@ export const installCli = async (
           `Invoke-WebRequest -Uri '${url}' -OutFile '${zipPath}'; ` +
           `Expand-Archive -Path '${zipPath}' -DestinationPath '${binDir}' -Force; ` +
           `Remove-Item -Path '${zipPath}' -Force"`,
-        { stdio: "inherit" }
+        { stdio: "inherit" },
       );
     } else {
       // macOS (without Homebrew) and Linux installation using curl/unzip
@@ -142,7 +146,9 @@ export const installCli = async (
       execSync(`curl -L -o "${zipPath}" "${url}"`, { stdio: "inherit" });
 
       // Extract
-      execSync(`unzip -o -q "${zipPath}" -d "${tempDir}"`, { stdio: "inherit" });
+      execSync(`unzip -o -q "${zipPath}" -d "${tempDir}"`, {
+        stdio: "inherit",
+      });
 
       // Move binary to bin directory
       const extractedBinary = join(tempDir, "aptos");
@@ -164,13 +170,13 @@ export const installCli = async (
     // Remind user about PATH if needed
     if (os !== "Windows") {
       console.log(
-        `\nMake sure ${binDir} is in your PATH. You can add it by running:`
+        `\nMake sure ${binDir} is in your PATH. You can add it by running:`,
       );
       console.log(`  export PATH="${binDir}:$PATH"`);
     }
   } catch (error) {
     throw new Error(
-      `Failed to install Aptos CLI: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to install Aptos CLI: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 };

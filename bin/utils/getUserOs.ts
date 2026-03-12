@@ -1,5 +1,5 @@
-import { platform, arch } from "os";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync } from "node:fs";
+import { arch, platform } from "node:os";
 
 export type SupportedOS = "macos" | "linux" | "windows";
 export type SupportedArch = "x86_64" | "aarch64";
@@ -134,7 +134,7 @@ export const getTargetPlatform = (): TargetPlatform => {
       // Windows only supports x86_64 currently
       if (architecture === "aarch64") {
         throw new Error(
-          "Windows ARM64 is not currently supported. Please use x86_64 emulation or build from source."
+          "Windows ARM64 is not currently supported. Please use x86_64 emulation or build from source.",
         );
       }
       return "Windows-x86_64";

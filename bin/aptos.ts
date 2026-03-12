@@ -17,9 +17,8 @@
 // Use --direct-download or set APTOS_DIRECT_DOWNLOAD=1 to skip package managers.
 
 import { program } from "commander";
-
-import { parseCommandOptions } from "./utils/parseCommandOptions.js";
 import { runCLI } from "./tasks/run.js";
+import { parseCommandOptions } from "./utils/parseCommandOptions.js";
 
 program
   .name("aptos")
@@ -29,9 +28,10 @@ program
   .option("-b, --binary-path <path>", "path to an existing Aptos CLI binary")
   .option(
     "-d, --direct-download",
-    "skip package managers and download directly from GitHub"
+    "skip package managers and download directly from GitHub",
   )
-  .allowUnknownOption();
+  .allowUnknownOption()
+  .allowExcessArguments(true);
 
 program.parse(process.argv);
 

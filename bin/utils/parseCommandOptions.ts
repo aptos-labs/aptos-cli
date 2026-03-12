@@ -1,4 +1,4 @@
-import { existsSync } from "fs";
+import { existsSync } from "node:fs";
 import { installCli } from "../tasks/install.js";
 import { runCLI } from "../tasks/run.js";
 import { updateCli } from "../tasks/update.js";
@@ -18,7 +18,7 @@ interface CommandOptions {
  */
 export const parseCommandOptions = async (
   options: CommandOptions,
-  unknownOptions: string[]
+  unknownOptions: string[],
 ): Promise<void> => {
   // if `--install` flag is set, only install the cli and don't run it
   if (options.install) {
