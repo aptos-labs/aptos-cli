@@ -16,31 +16,44 @@
 //
 // Use --direct-download or set APTOS_DIRECT_DOWNLOAD=1 to skip package managers.
 
+import { program } from "commander";
 import { runCLI } from "./tasks/run.js";
-import { parseArgs } from "./utils/parseArgs.js";
 import { parseCommandOptions } from "./utils/parseCommandOptions.js";
 
-const { install, update, binaryPath, directDownload, rest } = parseArgs(
-  process.argv.slice(2),
-);
+program
+  .name("aptos")
+  .helpOption(false)
+  .option("-i, --install", "install the latest version of the CLI")
+  .option("-u, --update", "update the CLI to the latest version")
+  .option("-b, --binary-path <path>", "path to an existing Aptos CLI binary")
+  .option(
+    "-d, --direct-download",
+    "skip package managers and download directly from GitHub",
+  )
+  .allowUnknownOption()
+  .allowExcessArguments(true);
+
+program.parse(process.argv);
 
 const main = async () => {
   const options = {
-    install,
-    update,
-    binaryPath,
+    install: program.opts().install,
+    update: program.opts().update,
+    binaryPath: program.opts().binaryPath,
     directDownload:
-      directDownload ||
+      program.opts().directDownload ||
       process.env.APTOS_DIRECT_DOWNLOAD === "1" ||
       process.env.APTOS_DIRECT_DOWNLOAD === "true",
   };
+  const unknownOptions = program.args;
 
-  // Forward --help to the underlying CLI binary
+  // Manually check for `--help` and handle the CLI `--help`
   if (process.argv.includes("--help")) {
-    return runCLI(rest, options.binaryPath);
+    // Forward to the CLI
+    return runCLI(unknownOptions, options.binaryPath);
   }
 
-  await parseCommandOptions(options, rest);
+  await parseCommandOptions(options, unknownOptions);
 };
 
 main().catch(console.error);

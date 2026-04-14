@@ -6,19 +6,13 @@ All notable changes to `@aptos-labs/aptos-cli` npm package will be documented in
 
 ### Breaking
 
-- **Zero production dependencies**: Removed `commander` in favor of native `process.argv` parsing. CLI behavior is unchanged, but programmatic usage of the argument parser (if any) is not backwards-compatible.
 - **Major version bump**: 2.0.0 → 3.0.0
 
 ### Changed
 
-- **Native arg parsing**: Replaced Commander.js with a lightweight `parseArgs()` utility (`bin/utils/parseArgs.ts`) that extracts known flags and collects pass-through args for the underlying Aptos CLI binary.
 - **ESM clean script**: Replaced CJS `require()` workaround in the `clean` script with ESM `import()`.
 - **tsconfig cleanup**: Removed unnecessary `esModuleInterop` and `preserveConstEnums` options; added explicit `types: ["node"]`.
 - **Build output**: Test files (`*.test.ts`) are no longer compiled to `dist/` or shipped in the npm package.
-
-### Added
-
-- New `bin/utils/parseArgs.ts` — native CLI argument parser with full test coverage (14 tests).
 
 ## [2.0.0] - 2026-03-26
 
