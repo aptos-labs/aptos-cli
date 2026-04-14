@@ -10,9 +10,8 @@ export const execSyncShell = (
   command: string,
   options?: ExecSyncShellOptions,
 ): Buffer | string => {
-  const execOptions: ExecSyncOptions = {
-    ...options,
-    shell: true as unknown as string,
-  };
-  return execSync(command, execOptions);
+  // @types/node overloads type `shell` as only `string`, but Node.js
+  // accepts `boolean` at runtime. Use the platform default shell path.
+  const shell = process.platform === "win32" ? "cmd.exe" : "/bin/sh";
+  return execSync(command, { ...options, shell });
 };
