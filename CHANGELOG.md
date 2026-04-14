@@ -8,11 +8,18 @@ All notable changes to `@aptos-labs/aptos-cli` npm package will be documented in
 
 - **Major version bump**: 2.0.0 → 3.0.0
 
+### Added
+
+- **Checksum verification**: Downloads are verified against SHA256 digests from the GitHub API before extraction. Gracefully skips if digest is unavailable.
+
 ### Changed
 
 - **ESM clean script**: Replaced CJS `require()` workaround in the `clean` script with ESM `import()`.
 - **tsconfig cleanup**: Removed unnecessary `esModuleInterop` and `preserveConstEnums` options; added explicit `types: ["node"]`.
 - **Build output**: Test files (`*.test.ts`) are no longer compiled to `dist/` or shipped in the npm package.
+- **Shell injection hardening**: Unix install uses `execFileSync` with argument arrays instead of shell-interpolated strings.
+- **Removed deprecated `getOS()`**: All callers migrated to `getPlatformInfo()`.
+- **Robust version parsing**: Uses regex extraction instead of fragile string splitting.
 
 ## [2.0.0] - 2026-03-26
 

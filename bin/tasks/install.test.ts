@@ -11,6 +11,7 @@ vi.mock("node:fs", () => ({
   chmodSync: vi.fn(),
   mkdirSync: vi.fn(),
   renameSync: vi.fn(),
+  createReadStream: vi.fn(),
 }));
 
 vi.mock("node:os", () => ({
@@ -32,6 +33,7 @@ vi.mock("../utils/getLocalBinPath.js", () => ({
 }));
 
 vi.mock("../utils/ghOperations.js", () => ({
+  getAssetDigest: vi.fn(),
   getCliVersion: vi.fn(),
   hasUserSpecifiedVersion: vi.fn(),
 }));
@@ -61,6 +63,7 @@ import {
 import { getBinDir, getLocalBinPath } from "../utils/getLocalBinPath.js";
 import { getPlatformInfo, getTargetPlatform } from "../utils/getUserOs.js";
 import {
+  getAssetDigest,
   getCliVersion,
   hasUserSpecifiedVersion,
 } from "../utils/ghOperations.js";
@@ -81,6 +84,7 @@ describe("install", () => {
     vi.mocked(getBinDir).mockReturnValue("/home/user/.local/bin");
     vi.mocked(getCliVersion).mockResolvedValue("1.0.0");
     vi.mocked(hasUserSpecifiedVersion).mockReturnValue(false);
+    vi.mocked(getAssetDigest).mockResolvedValue(null);
     vi.mocked(getTargetPlatform).mockReturnValue("Linux-x86_64");
   });
 

@@ -1,5 +1,12 @@
 import { execFileSync, execSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, renameSync } from "node:fs";
+import { createHash } from "node:crypto";
+import {
+  chmodSync,
+  createReadStream,
+  existsSync,
+  mkdirSync,
+  renameSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -15,6 +22,7 @@ import {
 } from "../utils/getLocalBinPath.js";
 import { getPlatformInfo, getTargetPlatform } from "../utils/getUserOs.js";
 import {
+  getAssetDigest,
   getCliVersion,
   hasUserSpecifiedVersion,
 } from "../utils/ghOperations.js";
@@ -26,6 +34,46 @@ import {
   isInstalledViaWinget,
   isWingetAvailable,
 } from "../utils/windowsPackageManagers.js";
+
+/**
+ * Compute the SHA256 hex digest of a file.
+ */
+const sha256File = (filePath: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const hash = createHash("sha256");
+    const stream = createReadStream(filePath);
+    stream.on("data", (chunk) => hash.update(chunk));
+    stream.on("end", () => resolve(hash.digest("hex")));
+    stream.on("error", reject);
+  });
+};
+
+/**
+ * Verify a downloaded file against its expected SHA256 digest.
+ * Warns on mismatch or if digest is unavailable; throws on mismatch.
+ */
+const verifyChecksum = async (
+  filePath: string,
+  expectedDigest: string | null,
+): Promise<void> => {
+  if (!expectedDigest) {
+    console.log(
+      "Checksum not available from GitHub API, skipping verification",
+    );
+    return;
+  }
+
+  const actual = await sha256File(filePath);
+  if (actual !== expectedDigest) {
+    throw new Error(
+      `Checksum verification failed!\n` +
+        `  Expected: ${expectedDigest}\n` +
+        `  Actual:   ${actual}\n` +
+        `The downloaded file may be corrupted or tampered with.`,
+    );
+  }
+  console.log("Checksum verified");
+};
 
 /**
  * Install the Aptos CLI.
@@ -123,26 +171,39 @@ export const installCli = async (
   );
 
   // Build download URL matching official release artifact naming
-  const url = `${GH_CLI_DOWNLOAD_URL}/${PNAME}-v${version}/${PNAME}-${version}-${targetPlatform}.zip`;
+  const assetName = `${PNAME}-${version}-${targetPlatform}.zip`;
+  const url = `${GH_CLI_DOWNLOAD_URL}/${PNAME}-v${version}/${assetName}`;
+
+  // Fetch expected checksum from GitHub API (non-blocking)
+  const expectedDigest = await getAssetDigest(version, assetName);
 
   const tempDir = tmpdir();
+  const zipPath = join(tempDir, "aptos-cli.zip");
 
   try {
     if (os === "windows") {
-      // Windows installation using PowerShell with argument array (no shell interpolation)
-      const zipPath = join(tempDir, "aptos-cli.zip");
-      const psScript = [
-        `Invoke-WebRequest -Uri '${url}' -OutFile '${zipPath}'`,
-        `Expand-Archive -Path '${zipPath}' -DestinationPath '${binDir}' -Force`,
-        `Remove-Item -Path '${zipPath}' -Force`,
-      ].join("; ");
-      execSync(`powershell -Command "${psScript}"`, { stdio: "inherit" });
-    } else {
-      // macOS (without Homebrew) and Linux installation using curl/unzip
-      const zipPath = join(tempDir, "aptos-cli.zip");
+      // Download
+      execSync(
+        `powershell -Command "Invoke-WebRequest -Uri '${url}' -OutFile '${zipPath}'"`,
+        { stdio: "inherit" },
+      );
 
+      // Verify checksum before extraction
+      await verifyChecksum(zipPath, expectedDigest);
+
+      // Extract and clean up
+      execSync(
+        `powershell -Command "` +
+          `Expand-Archive -Path '${zipPath}' -DestinationPath '${binDir}' -Force; ` +
+          `Remove-Item -Path '${zipPath}' -Force"`,
+        { stdio: "inherit" },
+      );
+    } else {
       // Download (argument array avoids shell injection)
       execFileSync("curl", ["-L", "-o", zipPath, url], { stdio: "inherit" });
+
+      // Verify checksum before extraction
+      await verifyChecksum(zipPath, expectedDigest);
 
       // Extract
       execFileSync("unzip", ["-o", "-q", zipPath, "-d", tempDir], {
