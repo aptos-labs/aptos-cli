@@ -10,11 +10,9 @@ export const execSyncShell = (
   command: string,
   options?: ExecSyncShellOptions,
 ): Buffer | string => {
-  // Type assertion needed due to @types/node ExecSyncOptions overload complexity
-  // where shell is typed as string | boolean but overloads expect specific types
-  const execOptions = {
+  const execOptions: ExecSyncOptions = {
     ...options,
-    shell: true,
-  } as unknown as ExecSyncOptions;
+    shell: true as unknown as string,
+  };
   return execSync(command, execOptions);
 };

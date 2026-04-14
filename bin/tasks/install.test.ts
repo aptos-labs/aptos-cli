@@ -1,17 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock all dependencies before importing the module under test
-vi.mock("child_process", () => ({
+vi.mock("node:child_process", () => ({
   execSync: vi.fn(),
+  execFileSync: vi.fn(),
 }));
 
-vi.mock("fs", () => ({
+vi.mock("node:fs", () => ({
   existsSync: vi.fn(),
   chmodSync: vi.fn(),
   mkdirSync: vi.fn(),
+  renameSync: vi.fn(),
 }));
 
-vi.mock("os", () => ({
+vi.mock("node:os", () => ({
   tmpdir: () => "/tmp",
   homedir: () => "/home/user",
   platform: vi.fn(() => "linux"),
@@ -19,7 +21,7 @@ vi.mock("os", () => ({
 }));
 
 vi.mock("../utils/getUserOs.js", () => ({
-  getOS: vi.fn(),
+  getPlatformInfo: vi.fn(),
   getTargetPlatform: vi.fn(),
 }));
 
@@ -49,7 +51,7 @@ vi.mock("../utils/windowsPackageManagers.js", () => ({
   installViaChoco: vi.fn(),
 }));
 
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import {
   installViaBrew,
@@ -57,7 +59,7 @@ import {
   isInstalledViaBrew,
 } from "../utils/brewOperations.js";
 import { getBinDir, getLocalBinPath } from "../utils/getLocalBinPath.js";
-import { getOS, getTargetPlatform } from "../utils/getUserOs.js";
+import { getPlatformInfo, getTargetPlatform } from "../utils/getUserOs.js";
 import {
   getCliVersion,
   hasUserSpecifiedVersion,
@@ -88,7 +90,10 @@ describe("install", () => {
 
   describe("macOS with Homebrew", () => {
     beforeEach(() => {
-      vi.mocked(getOS).mockReturnValue("MacOS");
+      vi.mocked(getPlatformInfo).mockReturnValue({
+        os: "macos",
+        arch: "x86_64",
+      });
       vi.mocked(isBrewAvailable).mockReturnValue(true);
     });
 
@@ -112,19 +117,22 @@ describe("install", () => {
     it("should skip Homebrew when directDownload is true", async () => {
       vi.mocked(isInstalledViaBrew).mockReturnValue(false);
       vi.mocked(existsSync).mockReturnValue(false);
-      vi.mocked(execSync).mockReturnValue(Buffer.from(""));
+      vi.mocked(execFileSync).mockReturnValue(Buffer.from(""));
       vi.mocked(getTargetPlatform).mockReturnValue("macos-x86_64");
 
       await installCli(true);
 
       expect(installViaBrew).not.toHaveBeenCalled();
-      expect(execSync).toHaveBeenCalled();
+      expect(execFileSync).toHaveBeenCalled();
     });
   });
 
   describe("Windows with winget", () => {
     beforeEach(() => {
-      vi.mocked(getOS).mockReturnValue("Windows");
+      vi.mocked(getPlatformInfo).mockReturnValue({
+        os: "windows",
+        arch: "x86_64",
+      });
       vi.mocked(isBrewAvailable).mockReturnValue(false);
       vi.mocked(isWingetAvailable).mockReturnValue(true);
       vi.mocked(isChocoAvailable).mockReturnValue(false);
@@ -150,7 +158,10 @@ describe("install", () => {
 
   describe("Windows with Chocolatey", () => {
     beforeEach(() => {
-      vi.mocked(getOS).mockReturnValue("Windows");
+      vi.mocked(getPlatformInfo).mockReturnValue({
+        os: "windows",
+        arch: "x86_64",
+      });
       vi.mocked(isBrewAvailable).mockReturnValue(false);
       vi.mocked(isWingetAvailable).mockReturnValue(false);
       vi.mocked(isChocoAvailable).mockReturnValue(true);
@@ -176,7 +187,10 @@ describe("install", () => {
 
   describe("Windows direct download", () => {
     beforeEach(() => {
-      vi.mocked(getOS).mockReturnValue("Windows");
+      vi.mocked(getPlatformInfo).mockReturnValue({
+        os: "windows",
+        arch: "x86_64",
+      });
       vi.mocked(isBrewAvailable).mockReturnValue(false);
       vi.mocked(isWingetAvailable).mockReturnValue(false);
       vi.mocked(isChocoAvailable).mockReturnValue(false);
@@ -212,19 +226,23 @@ describe("install", () => {
 
   describe("Linux direct download", () => {
     beforeEach(() => {
-      vi.mocked(getOS).mockReturnValue("Linux");
+      vi.mocked(getPlatformInfo).mockReturnValue({
+        os: "linux",
+        arch: "x86_64",
+      });
       vi.mocked(isBrewAvailable).mockReturnValue(false);
       vi.mocked(existsSync).mockReturnValue(false);
       vi.mocked(getTargetPlatform).mockReturnValue("Ubuntu-22.04-x86_64");
     });
 
     it("should download directly on Linux", async () => {
-      vi.mocked(execSync).mockReturnValue(Buffer.from(""));
+      vi.mocked(execFileSync).mockReturnValue(Buffer.from(""));
 
       await installCli();
 
-      expect(execSync).toHaveBeenCalledWith(
-        expect.stringContaining("curl"),
+      expect(execFileSync).toHaveBeenCalledWith(
+        "curl",
+        expect.arrayContaining(["-L"]),
         expect.any(Object),
       );
     });
@@ -234,7 +252,7 @@ describe("install", () => {
         if (path === "/home/user/.local/bin") return false;
         return false;
       });
-      vi.mocked(execSync).mockReturnValue(Buffer.from(""));
+      vi.mocked(execFileSync).mockReturnValue(Buffer.from(""));
 
       await installCli();
 
@@ -246,7 +264,10 @@ describe("install", () => {
 
   describe("already installed", () => {
     it("should skip if binary already exists", async () => {
-      vi.mocked(getOS).mockReturnValue("Linux");
+      vi.mocked(getPlatformInfo).mockReturnValue({
+        os: "linux",
+        arch: "x86_64",
+      });
       vi.mocked(isBrewAvailable).mockReturnValue(false);
       vi.mocked(existsSync).mockReturnValue(true);
 
@@ -264,11 +285,14 @@ describe("install", () => {
     });
 
     it("should skip package managers when specific version is set", async () => {
-      vi.mocked(getOS).mockReturnValue("MacOS");
+      vi.mocked(getPlatformInfo).mockReturnValue({
+        os: "macos",
+        arch: "x86_64",
+      });
       vi.mocked(isBrewAvailable).mockReturnValue(true);
       vi.mocked(isInstalledViaBrew).mockReturnValue(false);
       vi.mocked(existsSync).mockReturnValue(false);
-      vi.mocked(execSync).mockReturnValue(Buffer.from(""));
+      vi.mocked(execFileSync).mockReturnValue(Buffer.from(""));
       vi.mocked(getTargetPlatform).mockReturnValue("macos-x86_64");
 
       await installCli();
@@ -276,11 +300,14 @@ describe("install", () => {
       // Should NOT use Homebrew even though it's available
       expect(installViaBrew).not.toHaveBeenCalled();
       // Should download directly
-      expect(execSync).toHaveBeenCalled();
+      expect(execFileSync).toHaveBeenCalled();
     });
 
     it("should skip winget when specific version is set on Windows", async () => {
-      vi.mocked(getOS).mockReturnValue("Windows");
+      vi.mocked(getPlatformInfo).mockReturnValue({
+        os: "windows",
+        arch: "x86_64",
+      });
       vi.mocked(isBrewAvailable).mockReturnValue(false);
       vi.mocked(isWingetAvailable).mockReturnValue(true);
       vi.mocked(isChocoAvailable).mockReturnValue(true);
@@ -296,17 +323,21 @@ describe("install", () => {
     });
 
     it("should use specific version in download URL", async () => {
-      vi.mocked(getOS).mockReturnValue("Linux");
+      vi.mocked(getPlatformInfo).mockReturnValue({
+        os: "linux",
+        arch: "x86_64",
+      });
       vi.mocked(isBrewAvailable).mockReturnValue(false);
       vi.mocked(existsSync).mockReturnValue(false);
-      vi.mocked(execSync).mockReturnValue(Buffer.from(""));
+      vi.mocked(execFileSync).mockReturnValue(Buffer.from(""));
       vi.mocked(getTargetPlatform).mockReturnValue("Ubuntu-22.04-x86_64");
 
       await installCli();
 
       // Verify the URL contains the specific version
-      expect(execSync).toHaveBeenCalledWith(
-        expect.stringContaining("4.5.0"),
+      expect(execFileSync).toHaveBeenCalledWith(
+        "curl",
+        expect.arrayContaining([expect.stringContaining("4.5.0")]),
         expect.any(Object),
       );
     });

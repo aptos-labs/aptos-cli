@@ -9,11 +9,11 @@ const createMockChildProcess = () => {
 
 let mockChildProcess: EventEmitter;
 
-vi.mock("child_process", () => ({
+vi.mock("node:child_process", () => ({
   spawn: vi.fn(() => mockChildProcess),
 }));
 
-vi.mock("fs", () => ({
+vi.mock("node:fs", () => ({
   existsSync: vi.fn(),
 }));
 

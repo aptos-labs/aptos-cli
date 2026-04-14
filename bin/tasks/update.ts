@@ -89,8 +89,9 @@ export const updateCli = async (
         encoding: "utf8",
       }),
     ).trim();
-    // Version output format: "aptos X.Y.Z"
-    currentVersion = versionOutput.split(" ")[1] || "";
+    // Extract semver from output (e.g. "aptos 4.5.0" or "aptos-cli 4.5.0")
+    const match = versionOutput.match(/(\d+\.\d+\.\d+)/);
+    currentVersion = match?.[1] ?? "";
   } catch {
     console.error("Warning: Could not determine current CLI version");
     currentVersion = "";

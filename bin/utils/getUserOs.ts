@@ -143,19 +143,3 @@ export const getTargetPlatform = (): TargetPlatform => {
       throw new Error(`Unsupported OS: ${os}`);
   }
 };
-
-/**
- * Get simple OS identifier for branching logic.
- * @deprecated Use getPlatformInfo() or getTargetPlatform() instead for more precise platform detection.
- */
-export const getOS = (): "MacOS" | "Linux" | "Windows" => {
-  const { os } = getPlatformInfo();
-  switch (os) {
-    case "macos":
-      return "MacOS";
-    case "linux":
-      return "Linux";
-    case "windows":
-      return "Windows";
-  }
-};

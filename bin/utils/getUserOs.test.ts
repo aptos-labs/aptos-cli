@@ -2,8 +2,8 @@ import type * as os from "node:os";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // We need to mock the os module before importing the module under test
-vi.mock("os", async () => {
-  const actual = await vi.importActual<typeof os>("os");
+vi.mock("node:os", async () => {
+  const actual = await vi.importActual<typeof os>("node:os");
   return {
     ...actual,
     platform: vi.fn(),
@@ -12,8 +12,8 @@ vi.mock("os", async () => {
 });
 
 // We need to mock fs for the Linux distro detection
-vi.mock("fs", async () => {
-  const actual = await vi.importActual<typeof import("fs")>("fs");
+vi.mock("node:fs", async () => {
+  const actual = await vi.importActual<typeof import("node:fs")>("node:fs");
   return {
     ...actual,
     existsSync: vi.fn(),
@@ -23,7 +23,7 @@ vi.mock("fs", async () => {
 
 import { existsSync, readFileSync } from "node:fs";
 import { arch, platform } from "node:os";
-import { getOS, getPlatformInfo, getTargetPlatform } from "./getUserOs.js";
+import { getPlatformInfo, getTargetPlatform } from "./getUserOs.js";
 
 describe("getUserOs", () => {
   beforeEach(() => {
@@ -166,29 +166,6 @@ describe("getUserOs", () => {
       expect(() => getTargetPlatform()).toThrow(
         "Windows ARM64 is not currently supported",
       );
-    });
-  });
-
-  describe("getOS", () => {
-    it("should return MacOS for darwin", () => {
-      vi.mocked(platform).mockReturnValue("darwin");
-      vi.mocked(arch).mockReturnValue("x64");
-
-      expect(getOS()).toBe("MacOS");
-    });
-
-    it("should return Linux for linux", () => {
-      vi.mocked(platform).mockReturnValue("linux");
-      vi.mocked(arch).mockReturnValue("x64");
-
-      expect(getOS()).toBe("Linux");
-    });
-
-    it("should return Windows for win32", () => {
-      vi.mocked(platform).mockReturnValue("win32");
-      vi.mocked(arch).mockReturnValue("x64");
-
-      expect(getOS()).toBe("Windows");
     });
   });
 });
