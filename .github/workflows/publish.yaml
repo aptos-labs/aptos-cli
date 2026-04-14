@@ -37,8 +37,11 @@ jobs:
         with:
           node-version: "22"
           cache: pnpm
-          registry-url: "https://registry.npmjs.org"
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: pnpm publish --provenance --access public --no-git-checks
+
+      - name: Configure npm for OIDC publishing
+        run: npm config set registry https://registry.npmjs.org/
+
+      - run: npm publish --provenance --access public
