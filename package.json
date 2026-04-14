@@ -33,6 +33,11 @@
     "check:fix": "biome check --fix",
     "format": "biome format --fix"
   },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
   "sideEffects": false,
   "exports": {},
   "files": [
