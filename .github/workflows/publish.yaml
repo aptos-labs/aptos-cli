@@ -33,6 +33,7 @@ jobs:
           fi
 
       - uses: pnpm/action-setup@v5
+
       - uses: actions/setup-node@v6
         with:
           node-version: "22"
@@ -40,10 +41,18 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run check
       - run: pnpm build
+      - run: pnpm test
 
-      # Provenance + OIDC trusted publishing: id-token permission lets npm
-      # exchange the GitHub OIDC token for a short-lived npm publish token.
-      # No NPM_TOKEN secret needed — auth is handled via the trusted publisher
-      # config on npmjs.com.
+      - name: Upgrade npm (bundled npm is broken on this runner image)
+        run: |
+          tarball_url=$(curl -sS https://registry.npmjs.org/npm/latest | node -p 'JSON.parse(require("fs").readFileSync(0,"utf8")).dist.tarball')
+          curl -sS "$tarball_url" -o /tmp/npm-latest.tgz
+          npm_dir="$(dirname "$(which npm)")/../lib/node_modules/npm"
+          rm -rf "$npm_dir"
+          mkdir -p "$npm_dir"
+          tar xzf /tmp/npm-latest.tgz --strip-components=1 -C "$npm_dir"
+          npm --version
+
       - run: npm publish --provenance --access public
