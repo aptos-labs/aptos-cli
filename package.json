@@ -24,7 +24,7 @@
   },
   "license": "Apache-2.0",
   "scripts": {
-    "clean": "node -e \"import('node:fs').then(({rmSync})=>rmSync('dist',{recursive:true,force:true}))\"",
+    "clean": "node -e \"import('node:fs').then(({rmSync})=>rmSync('dist',{recursive:true,force:true})).catch(e=>{console.error(e);process.exit(1)})\"",
     "build": "pnpm run clean && tsc",
     "dev": "pnpm run build && node ./dist/aptos.js",
     "test": "vitest run",
