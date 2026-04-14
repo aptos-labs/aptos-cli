@@ -52,7 +52,7 @@ Uses Biome for linting and formatting (config in `biome.json`). TypeScript stric
 - `getLocalBinPath.ts` — Resolves install path (`~/.local/bin/` on Unix, `%USERPROFILE%\.aptoscli\bin\` on Windows)
 - `consts.ts` — Shared constants
 
-**Build output**: TypeScript in `bin/` compiles to `dist/` (ES2020 modules, strict mode, source maps, declarations).
+**Build output**: TypeScript in `bin/` compiles to `dist/` (ES2022 modules, strict mode, source maps, declarations).
 
 ## Testing
 

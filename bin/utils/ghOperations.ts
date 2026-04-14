@@ -1,7 +1,14 @@
 import { GH_CLI_DOWNLOAD_URL, PNAME } from "./consts.js";
 
+interface GitHubAsset {
+  name: string;
+  digest: string | null;
+  [key: string]: unknown;
+}
+
 interface GitHubRelease {
   tag_name: string;
+  assets?: GitHubAsset[];
   [key: string]: unknown;
 }
 
@@ -154,4 +161,38 @@ export const getLatestVersionGh = async (): Promise<string> => {
   throw new Error(
     "Could not determine latest version of Aptos CLI. No matching release found in the last 100 releases.",
   );
+};
+
+/**
+ * Fetch the SHA256 digest for a specific release asset from the GitHub API.
+ * Returns the hex digest string, or null if unavailable.
+ */
+export const getAssetDigest = async (
+  version: string,
+  assetName: string,
+): Promise<string | null> => {
+  const tag = `${PNAME}-v${version}`;
+  const url = `https://api.github.com/repos/aptos-labs/aptos-core/releases/tags/${tag}`;
+
+  try {
+    const response = await fetch(url, { headers: getGitHubHeaders() });
+    if (!response.ok) {
+      return null;
+    }
+
+    const release: GitHubRelease = await response.json();
+    const asset = release.assets?.find((a) => a.name === assetName);
+    if (!asset?.digest) {
+      return null;
+    }
+
+    // Digest format is "sha256:<hex>" — strip the prefix
+    const digest = asset.digest;
+    if (digest.startsWith("sha256:")) {
+      return digest.slice(7);
+    }
+    return null;
+  } catch {
+    return null;
+  }
 };

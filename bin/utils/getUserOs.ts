@@ -131,31 +131,10 @@ export const getTargetPlatform = (): TargetPlatform => {
     }
 
     case "windows":
-      // Windows only supports x86_64 currently
-      if (architecture === "aarch64") {
-        throw new Error(
-          "Windows ARM64 is not currently supported. Please use x86_64 emulation or build from source.",
-        );
-      }
+      // Windows ARM64 uses x86_64 binary via built-in emulation
       return "Windows-x86_64";
 
     default:
       throw new Error(`Unsupported OS: ${os}`);
-  }
-};
-
-/**
- * Get simple OS identifier for branching logic.
- * @deprecated Use getPlatformInfo() or getTargetPlatform() instead for more precise platform detection.
- */
-export const getOS = (): "MacOS" | "Linux" | "Windows" => {
-  const { os } = getPlatformInfo();
-  switch (os) {
-    case "macos":
-      return "MacOS";
-    case "linux":
-      return "Linux";
-    case "windows":
-      return "Windows";
   }
 };

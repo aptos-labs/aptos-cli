@@ -1,6 +1,6 @@
 {
   "name": "@aptos-labs/aptos-cli",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Aptos CLI available from npmjs",
   "packageManager": "pnpm@10.30.1",
   "engines": {
@@ -24,7 +24,7 @@
   },
   "license": "Apache-2.0",
   "scripts": {
-    "clean": "node --input-type=commonjs -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "clean": "node -e \"import('node:fs').then(({rmSync})=>rmSync('dist',{recursive:true,force:true})).catch(e=>{console.error(e);process.exit(1)})\"",
     "build": "pnpm run clean && tsc",
     "dev": "pnpm run build && node ./dist/aptos.js",
     "test": "vitest run",
@@ -33,6 +33,15 @@
     "check:fix": "biome check --fix",
     "format": "biome format --fix"
   },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
   "sideEffects": false,
   "exports": {},
   "files": [
@@ -44,7 +53,13 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",
     "@types/node": "^22",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.2",
     "vitest": "^4.0.18"
+  },
+  "pnpm": {
+    "overrides": {
+      "picomatch": ">=4.0.4",
+      "vite": ">=7.3.2"
+    }
   }
 }

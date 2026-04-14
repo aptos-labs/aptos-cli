@@ -2,11 +2,11 @@ import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("child_process", () => ({
+vi.mock("node:child_process", () => ({
   execSync: vi.fn(),
 }));
 
-vi.mock("fs", () => ({
+vi.mock("node:fs", () => ({
   existsSync: vi.fn(),
 }));
 

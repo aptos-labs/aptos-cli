@@ -58,10 +58,13 @@ export const isInstalledViaChoco = (): boolean => {
  */
 export const getCliPathWinget = (): string | null => {
   // Winget installs to various locations, try common ones
+  const localAppData = process.env.LOCALAPPDATA;
+  const programFiles = process.env.PROGRAMFILES;
   const possiblePaths = [
-    `${process.env.LOCALAPPDATA}\\Microsoft\\WinGet\\Packages\\Aptos.Aptos_Microsoft.Winget.Source_8wekyb3d8bbwe\\aptos.exe`,
-    `${process.env.PROGRAMFILES}\\Aptos\\aptos.exe`,
-    `${process.env.LOCALAPPDATA}\\Aptos\\aptos.exe`,
+    localAppData &&
+      `${localAppData}\\Microsoft\\WinGet\\Packages\\Aptos.Aptos_Microsoft.Winget.Source_8wekyb3d8bbwe\\aptos.exe`,
+    programFiles && `${programFiles}\\Aptos\\aptos.exe`,
+    localAppData && `${localAppData}\\Aptos\\aptos.exe`,
   ];
 
   for (const path of possiblePaths) {

@@ -2,6 +2,41 @@
 
 All notable changes to `@aptos-labs/aptos-cli` npm package will be documented in this file.
 
+## [3.0.0] - 2026-04-14
+
+### Breaking
+
+- **Major version bump**: 2.0.0 → 3.0.0
+- **Removed deprecated `getOS()`**: All callers migrated to `getPlatformInfo()`.
+
+### Added
+
+- **Checksum verification**: Downloads are verified against SHA256 digests from the GitHub API before extraction. Gracefully skips if digest is unavailable.
+- **Windows ARM64 support**: Falls through to x86_64 binary, which runs via Windows built-in emulation.
+- **Platform restrictions**: Added `os` and `cpu` fields to package.json to signal Node.js-only, supported architectures (x64, arm64).
+
+### Changed
+
+- **ESM clean script**: Replaced CJS `require()` workaround in the `clean` script with ESM `import()`.
+- **tsconfig cleanup**: Removed unnecessary `esModuleInterop` and `preserveConstEnums` options; added explicit `types: ["node"]`.
+- **Build output**: Test files (`*.test.ts`) are no longer compiled to `dist/` or shipped in the npm package.
+- **Shell injection hardening**: Unix install uses `execFileSync` with argument arrays instead of shell-interpolated strings.
+- **Robust version parsing**: Uses regex extraction instead of fragile string splitting.
+- **Consistent `node:` prefix**: All `vi.mock()` calls in tests use the `node:` protocol prefix.
+
+## [2.0.0] - 2026-03-26
+
+### Breaking
+
+- **Node.js 22+ required**: Minimum engine version raised from Node 18 to Node 22.
+- **ESM-only package**: Package is now `"type": "module"` with no CommonJS fallback.
+
+### Changed
+
+- **Biome for linting/formatting**: Replaced ESLint + Prettier with Biome.
+- **CI/CD improvements**: Added GitHub Actions workflows for testing, linting, and publishing.
+- **CLAUDE.md**: Added project documentation for Claude Code.
+
 ## [1.2.0] - 2026-01-27
 
 ### Added

@@ -8,7 +8,7 @@ import {
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { getCliPathBrew, isInstalledViaBrew } from "./brewOperations.js";
-import { getOS } from "./getUserOs.js";
+import { getPlatformInfo } from "./getUserOs.js";
 import {
   getCliPathChoco,
   getCliPathWinget,
@@ -21,7 +21,7 @@ import {
  * Avoids expensive shell spawns (brew --prefix, winget list) on every run.
  */
 const getCachePath = (): string => {
-  if (getOS() === "Windows") {
+  if (getPlatformInfo().os === "windows") {
     return join(homedir(), ".aptoscli", ".bin-path-cache");
   }
   return join(homedir(), ".local", "share", "aptos-cli", ".bin-path-cache");
@@ -68,9 +68,9 @@ export const invalidateBinPathCache = (): void => {
  * - Windows: $USERPROFILE\.aptoscli\bin
  */
 export const getBinDir = (): string => {
-  const os = getOS();
+  const { os } = getPlatformInfo();
 
-  if (os === "Windows") {
+  if (os === "windows") {
     // Match official Windows script: $env:USERPROFILE\.aptoscli\bin
     return join(homedir(), ".aptoscli", "bin");
   }
@@ -101,10 +101,10 @@ export const getLocalBinPath = (): string => {
     return cached;
   }
 
-  const os = getOS();
+  const { os } = getPlatformInfo();
 
   // On macOS, prefer Homebrew installation if it exists
-  if (os === "MacOS") {
+  if (os === "macos") {
     if (isInstalledViaBrew()) {
       try {
         const brewPath = getCliPathBrew();
@@ -117,7 +117,7 @@ export const getLocalBinPath = (): string => {
   }
 
   // On Windows, check for winget or Chocolatey installations
-  if (os === "Windows") {
+  if (os === "windows") {
     if (isInstalledViaWinget()) {
       const wingetPath = getCliPathWinget();
       if (wingetPath) {
@@ -136,7 +136,7 @@ export const getLocalBinPath = (): string => {
   }
 
   const binDir = getBinDir();
-  const binaryName = os === "Windows" ? "aptos.exe" : "aptos";
+  const binaryName = os === "windows" ? "aptos.exe" : "aptos";
   const defaultPath = join(binDir, binaryName);
   writeCachedBinPath(defaultPath);
   return defaultPath;
