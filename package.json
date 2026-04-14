@@ -55,5 +55,11 @@
     "@types/node": "^22",
     "typescript": "^6.0.2",
     "vitest": "^4.0.18"
+  },
+  "pnpm": {
+    "overrides": {
+      "picomatch": ">=4.0.4",
+      "vite": ">=7.3.2"
+    }
   }
 }
