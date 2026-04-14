@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Node.js npm package (`@aptos-labs/aptos-cli`) that wraps the Aptos blockchain CLI, providing cross-platform installation and execution. Uses Commander.js for CLI argument parsing. Published as the `aptos` command when installed via npm.
+Node.js npm package (`@aptos-labs/aptos-cli`) that wraps the Aptos blockchain CLI, providing cross-platform installation and execution. Zero production dependencies — uses native `process.argv` parsing. Published as the `aptos` command when installed via npm.
 
 ## Commands
 
@@ -38,7 +38,7 @@ Uses Biome for linting and formatting (config in `biome.json`). TypeScript stric
 
 ## Architecture
 
-**Entry point**: `bin/aptos.ts` — CLI wrapper using Commander.js that delegates to task modules.
+**Entry point**: `bin/aptos.ts` — CLI wrapper with native arg parsing that delegates to task modules.
 
 **Task modules** (`bin/tasks/`):
 - `install.ts` — Platform-aware installation: macOS uses Homebrew, Windows uses winget/Chocolatey, all platforms fall back to direct GitHub release download
@@ -50,9 +50,10 @@ Uses Biome for linting and formatting (config in `biome.json`). TypeScript stric
 - `ghOperations.ts` — GitHub API interactions for fetching releases and validating versions
 - `brewOperations.ts` / `windowsPackageManagers.ts` — Package manager detection and installation
 - `getLocalBinPath.ts` — Resolves install path (`~/.local/bin/` on Unix, `%USERPROFILE%\.aptoscli\bin\` on Windows)
+- `parseArgs.ts` — Native CLI argument parser (extracts known flags, collects pass-through args)
 - `consts.ts` — Shared constants
 
-**Build output**: TypeScript in `bin/` compiles to `dist/` (ES2020 modules, strict mode, source maps, declarations).
+**Build output**: TypeScript in `bin/` compiles to `dist/` (ES2022 modules, strict mode, source maps, declarations).
 
 ## Testing
 
