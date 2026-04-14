@@ -159,13 +159,11 @@ describe("getUserOs", () => {
       expect(getTargetPlatform()).toBe("Windows-x86_64");
     });
 
-    it("should throw for Windows ARM64", () => {
+    it("should return Windows-x86_64 for Windows ARM64 via emulation", () => {
       vi.mocked(platform).mockReturnValue("win32");
       vi.mocked(arch).mockReturnValue("arm64");
 
-      expect(() => getTargetPlatform()).toThrow(
-        "Windows ARM64 is not currently supported",
-      );
+      expect(getTargetPlatform()).toBe("Windows-x86_64");
     });
   });
 });

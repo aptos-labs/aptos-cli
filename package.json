@@ -38,6 +38,10 @@
     "linux",
     "win32"
   ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
   "sideEffects": false,
   "exports": {},
   "files": [
