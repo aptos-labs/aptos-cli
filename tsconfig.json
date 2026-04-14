@@ -11,11 +11,10 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "isolatedModules": true,
-    "esModuleInterop": true,
+    "types": ["node"],
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "removeComments": true,
-    "preserveConstEnums": true,
     "sourceMap": true,
     "inlineSources": true
   },
