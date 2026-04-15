@@ -34,6 +34,16 @@ To use the Aptos CLI, in your project environment, run the `npx aptos` command, 
 npx aptos
 ```
 
+Wrapper-specific flags such as `--install`, `--update`, `--binary-path`, and `--direct-download` are handled by the Node CLI wrapper. Other arguments are forwarded to the Aptos CLI binary, and this forwarding also works when the binary needs to be installed as part of the same invocation. For example:
+
+```bash
+npx aptos --help
+```
+
+```bash
+npx aptos move compile --package-dir ./my-move-package
+```
+
 ### Using a Custom Binary
 
 If you already have the Aptos CLI binary installed on your system, you can specify its path to use it directly:
