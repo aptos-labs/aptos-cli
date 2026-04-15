@@ -34,7 +34,7 @@ To use the Aptos CLI, in your project environment, run the `npx aptos` command, 
 npx aptos
 ```
 
-After the binary is installed, extra arguments are forwarded to the Aptos CLI. For example:
+Wrapper-specific flags such as `--install`, `--update`, `--binary-path`, and `--direct-download` are handled by the Node CLI wrapper. Other arguments are forwarded to the Aptos CLI binary, and this forwarding also works when the binary needs to be installed as part of the same invocation. For example:
 
 ```bash
 npx aptos --help
