@@ -1,0 +1,24 @@
+name: Setup Node.js with pnpm and install dependencies
+description: |
+  Sets up pnpm, Node.js 22, runs aikidosec-safe-chain (blocks packages newer
+  than 48 h and known malware), then installs dependencies with
+  pnpm install --frozen-lockfile.
+  NOTE: actions/checkout must be called in the calling job BEFORE this action.
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5
+
+    - name: Setup Node.js
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+      with:
+        node-version: "22"
+        cache: pnpm
+
+    - name: Setup safe-chain (supply-chain guard)
+      uses: aptos-labs/actions/aikidosec-safe-chain@main
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile

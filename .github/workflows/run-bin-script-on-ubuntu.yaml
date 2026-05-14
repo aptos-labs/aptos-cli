@@ -6,11 +6,16 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   test-x86_64:
     name: Ubuntu ${{ matrix.version }} (x86_64)
     runs-on: ${{ matrix.runner }}
     concurrency: ci-${{ github.ref }}-ubuntu-${{ matrix.version }}-x86_64
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -21,17 +26,11 @@ jobs:
             version: "22.04"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v5
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          node-version: "22"
-          cache: pnpm
+          persist-credentials: false
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup-node-pnpm
 
       - name: Build
         run: pnpm build
@@ -40,6 +39,8 @@ jobs:
         run: pnpm test
 
       - name: Display system info
+        env:
+          MATRIX_VERSION: ${{ matrix.version }}
         run: |
           echo "=== OS Release ==="
           cat /etc/os-release
@@ -48,7 +49,7 @@ jobs:
           uname -m
           echo ""
           echo "=== Expected Version ==="
-          echo "${{ matrix.version }}"
+          echo "$MATRIX_VERSION"
 
       - name: Test CLI installation
         env:
@@ -97,19 +98,15 @@ jobs:
     name: Ubuntu 24.04 (ARM64)
     runs-on: ubuntu-24.04-arm
     concurrency: ci-${{ github.ref }}-ubuntu-arm64
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v5
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          node-version: "22"
-          cache: pnpm
+          persist-credentials: false
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup-node-pnpm
 
       - name: Build
         run: pnpm build
