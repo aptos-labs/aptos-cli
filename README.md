@@ -119,7 +119,7 @@ The Aptos CLI can be used in CI/CD pipelines to build Move packages and generate
 - name: Setup Node.js
   uses: actions/setup-node@v4
   with:
-    node-version: "20"
+    node-version: "22"
 
 - name: Install Aptos CLI npm package
   run: npm install @aptos-labs/aptos-cli

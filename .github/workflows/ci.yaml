@@ -20,7 +20,7 @@ jobs:
           persist-credentials: false
       - uses: biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51 # v2
         with:
-          version: 2.4.6
+          version: 2.5.15
       - run: biome check
 
   build-and-test:
