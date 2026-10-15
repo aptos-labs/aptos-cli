@@ -11,7 +11,7 @@ permissions:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: 4cpu-gh-ubuntu24-x64
     permissions:
       contents: read
     steps:
@@ -33,7 +33,7 @@ jobs:
       matrix:
         include:
           - os: Linux x86_64
-            runner: ubuntu-latest
+            runner: 4cpu-gh-ubuntu24-x64
           - os: Linux ARM64
             runner: ubuntu-24.04-arm
           - os: macOS x86_64

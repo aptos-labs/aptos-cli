@@ -169,7 +169,7 @@ For upgrading existing object-deployed contracts:
 ```yaml
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: 4cpu-gh-ubuntu24-x64
     steps:
       # ... build steps above ...
       - uses: actions/upload-artifact@v4
@@ -179,7 +179,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: 4cpu-gh-ubuntu24-x64
     steps:
       - uses: actions/download-artifact@v4
         with:
