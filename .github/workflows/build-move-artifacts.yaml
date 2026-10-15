@@ -18,7 +18,7 @@ permissions:
 jobs:
   build-artifacts:
     name: Build Move Artifacts
-    runs-on: ubuntu-latest
+    runs-on: 4cpu-gh-ubuntu24-x64
     permissions:
       contents: read
     steps:
@@ -93,7 +93,7 @@ jobs:
   # Example job that uses the artifacts from the build step
   use-artifacts:
     name: Use Build Artifacts
-    runs-on: ubuntu-latest
+    runs-on: 4cpu-gh-ubuntu24-x64
     needs: build-artifacts
     permissions:
       contents: read
@@ -145,7 +145,7 @@ jobs:
   # Example: Build upgrade payload (for object code deployment)
   build-upgrade-payload:
     name: Build Upgrade Payload Example
-    runs-on: ubuntu-latest
+    runs-on: 4cpu-gh-ubuntu24-x64
     permissions:
       contents: read
     steps:
