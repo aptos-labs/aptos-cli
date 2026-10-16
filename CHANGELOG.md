@@ -2,12 +2,13 @@
 
 All notable changes to `@aptos-labs/aptos-cli` npm package will be documented in this file.
 
-## [Unreleased]
+## [3.0.1] - 2026-10-16
 
 ### Changed
 
 - **Node.js 22.12 or newer**: The engine range now matches Commander 15.
 - **Dependencies**: Commander 15, TypeScript 7, Vitest 5, and Biome 2.5. Transitive Vite, PostCSS, and Picomatch floors are raised to patched releases.
+- **Documentation**: Added CLI usage examples (`--help` and `move compile`) to README.md.
 
 ## [3.0.0] - 2026-04-14
 

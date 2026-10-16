@@ -1,6 +1,6 @@
 {
   "name": "@aptos-labs/aptos-cli",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Aptos CLI available from npmjs",
   "packageManager": "pnpm@10.34.7",
   "engines": {
