@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       named_address:
-        description: 'Named address for the module (e.g., 0x1234...)'
+        description: "Named address for the module (e.g., 0x1234...)"
         required: false
-        default: '0x1'
+        default: "0x1"
 
 permissions:
   contents: read
