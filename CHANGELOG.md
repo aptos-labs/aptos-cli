@@ -2,6 +2,12 @@
 
 All notable changes to `@aptos-labs/aptos-cli` npm package will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **Dependencies**: Commander 15.1, Vitest 5.1, and Biome 2.6. Transitive Vite, PostCSS, and Picomatch floors are raised to patched releases. `@types/node` stays on the Node 22 line (the current 26.x major is not adopted); `pnpm audit` reports no known vulnerabilities.
+
 ## [3.0.1] - 2026-10-16
 
 ### Changed

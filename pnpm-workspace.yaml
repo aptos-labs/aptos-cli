@@ -5,5 +5,5 @@ pmOnFail: ignore
 # Migrated from package.json "pnpm.overrides" (pnpm 11+ reads overrides here).
 overrides:
   picomatch: ">=4.0.7"
-  postcss: ">=8.5.29"
-  vite: ">=8.3.4"
+  postcss: ">=8.5.33"
+  vite: ">=8.3.8"

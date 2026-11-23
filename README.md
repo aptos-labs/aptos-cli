@@ -65,11 +65,13 @@ APTOS_CLI_VERSION=v4.5.0 npx aptos --install
 ```
 
 When `APTOS_CLI_VERSION` is set:
+
 - The specified version is downloaded directly from GitHub releases (package managers are bypassed)
 - The version is validated to ensure it exists before downloading
 - This works for both `--install` and `--update` commands
 
 This is useful for:
+
 - Pinning to a known working version
 - Testing against specific CLI versions
 - Reproducible builds in CI/CD pipelines
@@ -88,10 +90,12 @@ To set up the project for development:
 
 1. Clone the repository
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 3. Run the development server:
+
    ```bash
    npm run dev
    ```
