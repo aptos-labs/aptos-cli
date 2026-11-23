@@ -11,6 +11,7 @@ vi.mock("node:fs", () => ({
   chmodSync: vi.fn(),
   mkdirSync: vi.fn(),
   renameSync: vi.fn(),
+  rmSync: vi.fn(),
   createReadStream: vi.fn(),
 }));
 
@@ -78,6 +79,19 @@ import {
 import { installCli } from "./install.js";
 
 describe("install", () => {
+  // The binary does not exist at the pre-install check but must exist at
+  // the post-extraction check, or installCli throws.
+  const mockBinaryLandsAfterExtraction = () => {
+    let binaryChecks = 0;
+    vi.mocked(existsSync).mockImplementation((path) => {
+      if (path === "/home/user/.local/bin/aptos") {
+        binaryChecks += 1;
+        return binaryChecks > 1;
+      }
+      return false;
+    });
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getLocalBinPath).mockReturnValue("/home/user/.local/bin/aptos");
@@ -120,7 +134,7 @@ describe("install", () => {
 
     it("should skip Homebrew when directDownload is true", async () => {
       vi.mocked(isInstalledViaBrew).mockReturnValue(false);
-      vi.mocked(existsSync).mockReturnValue(false);
+      mockBinaryLandsAfterExtraction();
       vi.mocked(execFileSync).mockReturnValue(Buffer.from(""));
       vi.mocked(getTargetPlatform).mockReturnValue("macos-x86_64");
 
@@ -198,7 +212,7 @@ describe("install", () => {
       vi.mocked(isBrewAvailable).mockReturnValue(false);
       vi.mocked(isWingetAvailable).mockReturnValue(false);
       vi.mocked(isChocoAvailable).mockReturnValue(false);
-      vi.mocked(existsSync).mockReturnValue(false);
+      mockBinaryLandsAfterExtraction();
       vi.mocked(getTargetPlatform).mockReturnValue("Windows-x86_64");
     });
 
@@ -212,6 +226,33 @@ describe("install", () => {
       expect(execSync).toHaveBeenCalledWith(
         expect.stringContaining("powershell"),
         expect.any(Object),
+      );
+    });
+
+    it("should extract the zip with tar.exe, not Expand-Archive", async () => {
+      vi.mocked(execSync).mockReturnValue(Buffer.from(""));
+      vi.mocked(execFileSync).mockReturnValue(Buffer.from(""));
+
+      await installCli(true);
+
+      expect(execFileSync).toHaveBeenCalledWith(
+        "tar",
+        expect.arrayContaining(["-xf", "-C", "/home/user/.local/bin"]),
+        expect.any(Object),
+      );
+      expect(execSync).not.toHaveBeenCalledWith(
+        expect.stringContaining("Expand-Archive"),
+        expect.anything(),
+      );
+    });
+
+    it("should fail loudly when extraction produces no binary", async () => {
+      vi.mocked(execSync).mockReturnValue(Buffer.from(""));
+      vi.mocked(execFileSync).mockReturnValue(Buffer.from(""));
+      vi.mocked(existsSync).mockReturnValue(false);
+
+      await expect(installCli(true)).rejects.toThrow(
+        /Extraction completed without producing the expected binary/,
       );
     });
 
@@ -235,7 +276,7 @@ describe("install", () => {
         arch: "x86_64",
       });
       vi.mocked(isBrewAvailable).mockReturnValue(false);
-      vi.mocked(existsSync).mockReturnValue(false);
+      mockBinaryLandsAfterExtraction();
       vi.mocked(getTargetPlatform).mockReturnValue("Ubuntu-22.04-x86_64");
     });
 
@@ -252,10 +293,6 @@ describe("install", () => {
     });
 
     it("should create bin directory if it doesn't exist", async () => {
-      vi.mocked(existsSync).mockImplementation((path) => {
-        if (path === "/home/user/.local/bin") return false;
-        return false;
-      });
       vi.mocked(execFileSync).mockReturnValue(Buffer.from(""));
 
       await installCli();
@@ -295,7 +332,7 @@ describe("install", () => {
       });
       vi.mocked(isBrewAvailable).mockReturnValue(true);
       vi.mocked(isInstalledViaBrew).mockReturnValue(false);
-      vi.mocked(existsSync).mockReturnValue(false);
+      mockBinaryLandsAfterExtraction();
       vi.mocked(execFileSync).mockReturnValue(Buffer.from(""));
       vi.mocked(getTargetPlatform).mockReturnValue("macos-x86_64");
 
@@ -315,7 +352,7 @@ describe("install", () => {
       vi.mocked(isBrewAvailable).mockReturnValue(false);
       vi.mocked(isWingetAvailable).mockReturnValue(true);
       vi.mocked(isChocoAvailable).mockReturnValue(true);
-      vi.mocked(existsSync).mockReturnValue(false);
+      mockBinaryLandsAfterExtraction();
       vi.mocked(execSync).mockReturnValue(Buffer.from(""));
       vi.mocked(getTargetPlatform).mockReturnValue("Windows-x86_64");
 
@@ -332,7 +369,7 @@ describe("install", () => {
         arch: "x86_64",
       });
       vi.mocked(isBrewAvailable).mockReturnValue(false);
-      vi.mocked(existsSync).mockReturnValue(false);
+      mockBinaryLandsAfterExtraction();
       vi.mocked(execFileSync).mockReturnValue(Buffer.from(""));
       vi.mocked(getTargetPlatform).mockReturnValue("Ubuntu-22.04-x86_64");
 
