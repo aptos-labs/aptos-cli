@@ -49,11 +49,9 @@ export const getPlatformInfo = (): PlatformInfo => {
   let architecture: SupportedArch;
   switch (osArch) {
     case "x64":
-    case "x86_64":
       architecture = "x86_64";
       break;
     case "arm64":
-    case "aarch64":
       architecture = "aarch64";
       break;
     default:
