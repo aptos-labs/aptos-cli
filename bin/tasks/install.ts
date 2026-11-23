@@ -6,6 +6,7 @@ import {
   existsSync,
   mkdirSync,
   renameSync,
+  rmSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -191,13 +192,22 @@ export const installCli = async (
       // Verify checksum before extraction
       await verifyChecksum(zipPath, expectedDigest);
 
-      // Extract and clean up
-      execSync(
-        `powershell -Command "` +
-          `Expand-Archive -Path '${zipPath}' -DestinationPath '${binDir}' -Force; ` +
-          `Remove-Item -Path '${zipPath}' -Force"`,
-        { stdio: "inherit" },
-      );
+      // Extract with tar.exe (bsdtar, shipped with Windows 10 1803+).
+      // Expand-Archive in PowerShell 7 fails on current runner images with
+      // "Cannot find an overload for ExtractToDirectory and the argument
+      // count: 3", and as a non-terminating error it was masked by the
+      // trailing Remove-Item, so install reported success without ever
+      // extracting aptos.exe. execFileSync throws on a non-zero exit.
+      execFileSync("tar", ["-xf", zipPath, "-C", binDir], {
+        stdio: "inherit",
+      });
+
+      // Clean up
+      try {
+        rmSync(zipPath, { force: true });
+      } catch {
+        // Ignore cleanup errors
+      }
     } else {
       // Download (argument array avoids shell injection)
       execFileSync("curl", ["-L", "-o", zipPath, url], { stdio: "inherit" });
@@ -223,6 +233,15 @@ export const installCli = async (
       } catch {
         // Ignore cleanup errors
       }
+    }
+
+    // Fail loudly if extraction produced no binary: never report success
+    // for an install that did not land (see the Expand-Archive failure
+    // above, which previously slipped through to this line).
+    if (!existsSync(binaryPath)) {
+      throw new Error(
+        `Extraction completed without producing the expected binary at ${binaryPath}`,
+      );
     }
 
     console.log(`Aptos CLI installed successfully to ${binaryPath}`);
