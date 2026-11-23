@@ -41,11 +41,13 @@ Uses Biome for linting and formatting (config in `biome.json`). TypeScript stric
 **Entry point**: `bin/aptos.ts` — CLI wrapper using Commander.js that delegates to task modules.
 
 **Task modules** (`bin/tasks/`):
+
 - `install.ts` — Platform-aware installation: macOS uses Homebrew, Windows uses winget/Chocolatey, all platforms fall back to direct GitHub release download
 - `run.ts` — Executes the installed binary, piping exit codes
 - `update.ts` — Updates CLI to latest version
 
 **Utilities** (`bin/utils/`):
+
 - `getUserOs.ts` — Detects OS, architecture, and Ubuntu version; returns a `TargetPlatform` string used for GitHub release artifact naming
 - `ghOperations.ts` — GitHub API interactions for fetching releases and validating versions
 - `brewOperations.ts` / `windowsPackageManagers.ts` — Package manager detection and installation
@@ -63,7 +65,14 @@ Tests are co-located with source files as `*.test.ts`. Uses Vitest with globals 
 ```typescript
 type SupportedOS = "macos" | "linux" | "windows";
 type SupportedArch = "x86_64" | "aarch64";
-type TargetPlatform = "macos-x86_64" | "macos-arm64" | "Ubuntu-22.04-x86_64" | "Ubuntu-24.04-x86_64" | "Linux-x86_64" | "Linux-aarch64" | "Windows-x86_64";
+type TargetPlatform =
+  | "macos-x86_64"
+  | "macos-arm64"
+  | "Ubuntu-22.04-x86_64"
+  | "Ubuntu-24.04-x86_64"
+  | "Linux-x86_64"
+  | "Linux-aarch64"
+  | "Windows-x86_64";
 ```
 
 ## Environment Variables
